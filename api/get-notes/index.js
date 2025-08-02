@@ -1,8 +1,5 @@
 // api/get-notes/index.js
 
-// ★★★ デバッグのための一次的な変更です ★★★
-// 本来のデータは一旦コメントアウトします
-/*
 const notesData = [
     {
         id: 1,
@@ -29,18 +26,13 @@ const notesData = [
         tags: '#ツール #VSCode'
     },
 ];
-*/
 
 module.exports = async function (context, req) {
     context.log('JavaScript HTTP trigger function processed a request.');
 
-    // ★★★ デバッグのため、返すデータをシンプルなテストデータに固定します ★★★
-    const testData = [
-        { id: 99, title: "テストノート", content: "APIからのテストデータです。これが表示されれば、APIは正常に動いています。", tags: "#test #debug" }
-    ];
-
     context.res = {
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(testData)
+        body: JSON.stringify(notesData)
     };
 }
+
