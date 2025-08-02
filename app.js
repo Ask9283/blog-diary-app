@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const errorMessageDiv = document.getElementById('error-message');
 
     let currentPage = 1;
-    const pageSize = 6; // 1ページあたりの表示件数
+    const pageSize = 6;
 
     const showError = (message) => {
         errorMessageDiv.textContent = message;
@@ -15,32 +15,18 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const fetchNotesFromAPI = async (page = 1, searchTerm = '') => {
         try {
-            // APIをシミュレート
-            console.log(`Fetching data (page: ${page}, search: "${searchTerm}")...`);
-            
-            // 実際のAPI呼び出しに備え、URLにパラメータを追加する形を模倣
-            // const response = await fetch(`/api/get-notes?page=${page}&search=${searchTerm}`);
-            // if (!response.ok) throw new Error...
-            // const { notes, totalItems } = await response.json();
-            // return { notes, totalItems };
-
-            // --- 以下は現在のシミュレーションコード ---
-            let filteredData = notesData;
-
-            if (searchTerm) {
-                const lowerCaseSearchTerm = searchTerm.toLowerCase();
-                filteredData = notesData.filter(note =>
-                    note.title.toLowerCase().includes(lowerCaseSearchTerm) ||
-                    note.content.toLowerCase().includes(lowerCaseSearchTerm) ||
-                    note.tags.toLowerCase().includes(lowerCaseSearchTerm)
-                );
+            const params = new URLSearchParams({
+                page: page,
+                pageSize: pageSize,
+                search: searchTerm
+            });
+            const response = await fetch(`/api/get-notes?${params.toString()}`);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
             }
-
-            const totalItems = filteredData.length;
-            const paginatedData = filteredData.slice((page - 1) * pageSize, page * pageSize);
-            
-            return Promise.resolve({ notes: paginatedData, totalItems });
+            return await response.json();
         } catch (error) {
+            console.error("Could not fetch notes:", error);
             showError('日記データの読み込みに失敗しました。');
             return { notes: [], totalItems: 0 };
         }
@@ -48,7 +34,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const renderCards = (notes) => {
         cardGrid.innerHTML = '';
-        if (notes.length === 0) {
+        if (!notes || notes.length === 0) {
             cardGrid.innerHTML = '<p class="no-results">該当する日記がありません。</p>';
             return;
         }
@@ -104,7 +90,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         sortedTags.forEach(tagInfo => {
             const listItem = document.createElement('li');
             const link = document.createElement('a');
-            link.href = `?search=${tagInfo.tag}`;
+            link.href = `?search=${encodeURIComponent(tagInfo.tag)}`;
             link.textContent = `${tagInfo.tag} (${tagInfo.count})`;
             link.addEventListener('click', (event) => {
                 event.preventDefault();
@@ -130,7 +116,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     // --- 初期表示処理 ---
-    const { notes: allNotesForTags } = await fetchNotesFromAPI(1, ''); // タグは全件から生成
+    const { notes: allNotesForTags } = await fetchNotesFromAPI(1, '');
     renderTags(allNotesForTags);
     
     const params = new URLSearchParams(window.location.search);
