@@ -34,6 +34,8 @@ module.exports = async function (context, req) {
     context.res = {
         // status: 200, // デフォルトで200
         headers: { 'Content-Type': 'application/json' },
-        body: notesData
+        // ★★★ ここを更新しました ★★★
+        // データをJSON文字列に変換して、より安全に返すように変更
+        body: JSON.stringify(notesData)
     };
 }
