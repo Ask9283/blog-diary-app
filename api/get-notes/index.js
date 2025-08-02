@@ -25,14 +25,55 @@ const notesData = [
         content: 'Live Server拡張機能を入れると、保存するだけでブラウザが自動更新されて最高に便利。他にも便利な拡張機能がたくさんあるので、色々試してみると良い。',
         tags: '#ツール #VSCode'
     },
+    {
+        id: 5,
+        title: 'ページネーション',
+        content: 'データが多くなってきたら必須の機能。API側でページング処理を行うのが効率的。',
+        tags: '#機能 #API'
+    },
+    {
+        id: 6,
+        title: 'APIサーバーの役割',
+        content: 'フロントエンドとデータベースの橋渡し役。セキュリティの担保も重要な責務。',
+        tags: '#API #バックエンド'
+    },
+    {
+        id: 7,
+        title: 'デバッグの重要性',
+        content: '開発者ツールを使いこなせると、エラーの原因特定が格段に速くなる。404, 500エラーとの戦いだった。',
+        tags: '#開発 #デバッグ'
+    }
 ];
 
 module.exports = async function (context, req) {
-    context.log('JavaScript HTTP trigger function processed a request.');
+    context.log('API: get-notes function processed a request.');
+
+    const page = parseInt(req.query.page || "1", 10);
+    const pageSize = parseInt(req.query.pageSize || "6", 10);
+    const searchTerm = (req.query.search || "").toLowerCase();
+
+    let filteredData = notesData;
+
+    if (searchTerm) {
+        filteredData = notesData.filter(note =>
+            note.title.toLowerCase().includes(searchTerm) ||
+            note.content.toLowerCase().includes(searchTerm) ||
+            note.tags.toLowerCase().includes(searchTerm)
+        );
+    }
+
+    const totalItems = filteredData.length;
+    const paginatedData = filteredData.slice((page - 1) * pageSize, page * pageSize);
+
+    const response = {
+        notes: paginatedData,
+        totalItems: totalItems,
+        totalPages: Math.ceil(totalItems / pageSize),
+        currentPage: page
+    };
 
     context.res = {
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(notesData)
+        body: JSON.stringify(response)
     };
 }
-
