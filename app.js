@@ -13,30 +13,21 @@ document.addEventListener('DOMContentLoaded', async () => {
         errorMessageDiv.style.display = 'block';
     };
 
-    const fetchNotesFromAPI = async (page = 1, searchTerm = '') => {
+    const fetchNotesFromAPI = async () => {
+        console.log('Fetching data from real API...');
         try {
-            // APIをシミュレート
-            console.log(`Fetching data (page: ${page}, search: "${searchTerm}")...`);
-            let filteredData = notesData;
-
-            if (searchTerm) {
-                const lowerCaseSearchTerm = searchTerm.toLowerCase();
-                filteredData = notesData.filter(note =>
-                    note.title.toLowerCase().includes(lowerCaseSearchTerm) ||
-                    note.content.toLowerCase().includes(lowerCaseSearchTerm) ||
-                    note.tags.toLowerCase().includes(lowerCaseSearchTerm)
-                );
+            const response = await fetch('/api/get-notes');
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
             }
-
-            const totalItems = filteredData.length;
-            const paginatedData = filteredData.slice((page - 1) * pageSize, page * pageSize);
-            
-            return Promise.resolve({ notes: paginatedData, totalItems });
+            const data = await response.json();
+            return data;
         } catch (error) {
-            showError('日記データの読み込みに失敗しました。');
-            return { notes: [], totalItems: 0 };
+            console.error("Could not fetch notes:", error);
+            return []; // エラー時は空の配列を返す
         }
     };
+
 
     const renderCards = (notes) => {
         cardGrid.innerHTML = '';
