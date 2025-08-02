@@ -13,21 +13,38 @@ document.addEventListener('DOMContentLoaded', async () => {
         errorMessageDiv.style.display = 'block';
     };
 
-    const fetchNotesFromAPI = async () => {
-        console.log('Fetching data from real API...');
+    const fetchNotesFromAPI = async (page = 1, searchTerm = '') => {
         try {
-            const response = await fetch('/api/get-notes');
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+            // APIをシミュレート
+            console.log(`Fetching data (page: ${page}, search: "${searchTerm}")...`);
+            
+            // 実際のAPI呼び出しに備え、URLにパラメータを追加する形を模倣
+            // const response = await fetch(`/api/get-notes?page=${page}&search=${searchTerm}`);
+            // if (!response.ok) throw new Error...
+            // const { notes, totalItems } = await response.json();
+            // return { notes, totalItems };
+
+            // --- 以下は現在のシミュレーションコード ---
+            let filteredData = notesData;
+
+            if (searchTerm) {
+                const lowerCaseSearchTerm = searchTerm.toLowerCase();
+                filteredData = notesData.filter(note =>
+                    note.title.toLowerCase().includes(lowerCaseSearchTerm) ||
+                    note.content.toLowerCase().includes(lowerCaseSearchTerm) ||
+                    note.tags.toLowerCase().includes(lowerCaseSearchTerm)
+                );
             }
-            const data = await response.json();
-            return data;
+
+            const totalItems = filteredData.length;
+            const paginatedData = filteredData.slice((page - 1) * pageSize, page * pageSize);
+            
+            return Promise.resolve({ notes: paginatedData, totalItems });
         } catch (error) {
-            console.error("Could not fetch notes:", error);
-            return []; // エラー時は空の配列を返す
+            showError('日記データの読み込みに失敗しました。');
+            return { notes: [], totalItems: 0 };
         }
     };
-
 
     const renderCards = (notes) => {
         cardGrid.innerHTML = '';
