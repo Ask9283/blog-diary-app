@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>日記の詳細</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📖</text></svg>">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2>プロジェクト名</h2>
+            </div>
+            <div class="sidebar-content">
+                <input type="search" placeholder="ページを検索..." class="search-box" disabled>
+                <nav class="page-list">
+                    <h4>タグ一覧</h4>
+                    <ul id="tag-list"></ul>
+                </nav>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <div id="error-message" class="error-message"></div>
+            <div class="note-detail-container" id="note-detail-container"></div>
+            <a href="index.html" class="back-link">← 一覧に戻る</a>
+        </main>
+    </div>
+
+    <script src="data.js"></script>
+    <script src="note.js"></script>
+</body>
+</html>

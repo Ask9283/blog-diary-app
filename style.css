@@ -1,0 +1,366 @@
+/* --- 全体の基本設定 (ダークテーマ) --- */
+body {
+    margin: 0;
+    font-family: 'Noto Sans JP', sans-serif;
+    background-color: #12181f;
+    color: #e1e1e1;
+    line-height: 1.6;
+}
+
+a {
+    text-decoration: none;
+    color: inherit;
+}
+
+/* --- レイアウトの骨格 --- */
+.container {
+    display: flex;
+    height: 100vh;
+}
+
+/* --- 左側のサイドバー --- */
+.sidebar {
+    width: 240px;
+    background-color: #1c2128;
+    border-right: 1px solid #30363d;
+    display: flex;
+    flex-direction: column;
+    padding: 16px;
+    box-shadow: 2px 0 5px rgba(0,0,0,0.2);
+}
+
+.sidebar-header h2 {
+    margin: 0 0 16px 0;
+    font-size: 20px;
+    color: #ffffff;
+}
+
+.search-box {
+    width: 100%;
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: 1px solid #30363d;
+    background-color: #12181f;
+    color: #e1e1e1;
+    font-size: 14px;
+    box-sizing: border-box;
+    margin-bottom: 16px;
+}
+
+.search-box::placeholder {
+    color: #8b949e;
+}
+
+.page-list h4 {
+    margin: 16px 0 8px 0;
+    font-size: 14px;
+    color: #8b949e;
+}
+
+.page-list ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.page-list li a {
+    display: block;
+    padding: 8px 4px;
+    color: #c9d1d9;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+}
+
+.page-list li a:hover {
+    background-color: #292e36;
+}
+
+
+/* --- 右側のメインコンテンツ --- */
+.main-content {
+    flex-grow: 1;
+    padding: 24px;
+    overflow-y: auto;
+}
+
+.main-header {
+    margin-bottom: 24px;
+}
+
+/* --- カード (index.html) --- */
+.card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 20px;
+}
+
+.card {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background-color: #1c2128;
+    border-radius: 8px;
+    border: 1px solid #30363d;
+    padding: 16px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    transition: transform 0.2s, border-color 0.2s;
+    box-sizing: border-box;
+}
+
+.card:hover {
+    transform: translateY(-4px);
+    border-color: #33aaff;
+}
+
+.card h3 {
+    margin: 0 0 8px 0;
+    font-size: 18px;
+    color: #ffffff;
+}
+
+.card .card-content-preview {
+    margin: 0 0 8px 0;
+    font-size: 14px;
+    color: #8b949e;
+    flex-grow: 1;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.card .card-tags {
+    margin: 8px 0 0 0;
+    font-size: 12px;
+    color: #33aaff;
+}
+
+
+/* --- 詳細表示 (note.html) --- */
+.note-detail-container {
+    background-color: #1c2128;
+    padding: 32px;
+    border-radius: 8px;
+    border: 1px solid #30363d;
+    margin-bottom: 24px;
+}
+
+.note-detail-container h1 {
+    margin-top: 0;
+    color: #ffffff;
+}
+
+.note-detail-container .content {
+    white-space: pre-wrap;
+    font-size: 16px;
+    line-height: 1.8;
+}
+
+.note-detail-container .tags {
+    margin-top: 24px;
+    color: #33aaff;
+}
+
+.back-link {
+    display: inline-block;
+    padding: 8px 16px;
+    background-color: #238636;
+    color: white;
+    border-radius: 6px;
+    transition: background-color 0.2s;
+}
+
+.back-link:hover {
+    background-color: #2ea043;
+}
+
+/* --- ページネーション --- */
+.pagination-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 32px;
+    gap: 8px;
+}
+.pagination-button {
+    padding: 8px 12px;
+    border: 1px solid #30363d;
+    background-color: #1c2128;
+    color: #c9d1d9;
+    border-radius: 6px;
+    cursor: pointer;
+}
+.pagination-button:hover {
+    border-color: #33aaff;
+}
+.pagination-button.active {
+    background-color: #33aaff;
+    color: #12181f;
+    font-weight: bold;
+    border-color: #33aaff;
+}
+.pagination-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* --- エラー・成功メッセージ --- */
+.error-message {
+    color: #ff7b72;
+    background-color: rgba(255, 123, 114, 0.1);
+    border: 1px solid #ff7b72;
+    padding: 12px;
+    border-radius: 6px;
+    margin-bottom: 16px;
+    display: none; /* 初期状態は非表示 */
+}
+.success-message {
+    color: #2ea043;
+    margin-top: 16px;
+}
+
+
+/* --- ログインページ --- */
+.login-page {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+.login-container {
+    width: 100%;
+    max-width: 400px;
+    padding: 40px;
+    background-color: #1c2128;
+    border-radius: 8px;
+    border: 1px solid #30363d;
+}
+.login-container h1 {
+    text-align: center;
+    margin-bottom: 24px;
+}
+.form-group {
+    margin-bottom: 20px;
+}
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+}
+.form-group input {
+    width: 100%;
+    padding: 10px;
+    border-radius: 6px;
+    border: 1px solid #30363d;
+    background-color: #12181f;
+    color: #e1e1e1;
+    font-size: 16px;
+    box-sizing: border-box;
+}
+.login-button {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 6px;
+    background-color: #33aaff;
+    color: #12181f;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+.login-button:hover {
+    background-color: #5cc0ff;
+}
+.login-error {
+    color: #ff7b72;
+    text-align: center;
+    margin-top: 16px;
+    height: 1em;
+}
+
+/* --- 管理画面 --- */
+.add-card-form-container {
+    background-color: #1c2128;
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid #30363d;
+}
+#note-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+#note-form input,
+#note-form textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #30363d;
+    border-radius: 6px;
+    background-color: #12181f;
+    color: #e1e1e1;
+    font-family: inherit;
+    font-size: 14px;
+    box-sizing: border-box;
+}
+#note-form button {
+    align-self: flex-start;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    background-color: #33aaff;
+    color: #12181f;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+#note-form button:hover {
+    background-color: #5cc0ff;
+}
+.form-actions {
+    display: flex;
+    gap: 12px;
+}
+.cancel-button {
+    background-color: #30363d !important;
+    color: #c9d1d9 !important;
+}
+.cancel-button:hover {
+    background-color: #484f58 !important;
+}
+
+.note-list-container {
+    margin-top: 32px;
+}
+.note-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+.note-list-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px;
+    background-color: #1c2128;
+    border: 1px solid #30363d;
+    border-radius: 6px;
+    margin-bottom: 12px;
+}
+.note-list-item-title {
+    font-weight: bold;
+}
+.note-list-item-actions button {
+    margin-left: 8px;
+    padding: 6px 12px;
+    border: 1px solid #30363d;
+    border-radius: 6px;
+    background-color: #292e36;
+    color: #c9d1d9;
+    cursor: pointer;
+}
+.note-list-item-actions button.delete-button {
+    border-color: #ff7b72;
+    color: #ff7b72;
+}
