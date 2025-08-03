@@ -1,38 +1,37 @@
-// DOMの読み込みが完了したら実行
-document.addEventListener('DOMContentLoaded', async () => { // ★★★ asyncを追加 ★★★
+// note.js
+document.addEventListener('DOMContentLoaded', async () => {
     const noteDetailContainer = document.getElementById('note-detail-container');
     const tagListContainer = document.getElementById('tag-list');
+    const errorMessageDiv = document.getElementById('error-message');
 
-    /**
-     * APIからデータを取得する処理をシミュレートする関数。
-     */
-    const fetchNotesFromAPI = async () => {
-        console.log('Fetching data (simulation)...');
-        return Promise.resolve(notesData);
+    const showError = (message) => {
+        errorMessageDiv.textContent = message;
+        errorMessageDiv.style.display = 'block';
     };
 
-    /**
-     * 全ての日記データからタグを集計し、頻度順にソートして返す関数
-     */
-    const getSortedTags = (notes) => {
+    const fetchAllNotes = async () => {
+        try {
+            const response = await fetch('/api/get-notes');
+            if (!response.ok) throw new Error('Failed to fetch notes');
+            return await response.json();
+        } catch (error) {
+            console.error(error);
+            showError('日記データの読み込みに失敗しました。');
+            return [];
+        }
+    };
+
+    const renderTags = (allNotes) => {
         const tagCounts = {};
-        notes.forEach(note => {
+        allNotes.forEach(note => {
+            if (!note.tags) return;
             const tags = note.tags.split(' ').filter(tag => tag.startsWith('#'));
             tags.forEach(tag => {
-                if (tag) {
-                    tagCounts[tag] = (tagCounts[tag] || 0) + 1;
-                }
+                if (tag) tagCounts[tag] = (tagCounts[tag] || 0) + 1;
             });
         });
-        return Object.entries(tagCounts)
-            .sort(([, countA], [, countB]) => countB - countA)
-            .map(([tag, count]) => ({ tag, count }));
-    };
+        const sortedTags = Object.entries(tagCounts).sort((a, b) => b[1] - a[1]).map(item => ({ tag: item[0], count: item[1] }));
 
-    /**
-     * ソートされたタグリストをサイドバーに描画する関数
-     */
-    const renderTags = (sortedTags) => {
         tagListContainer.innerHTML = '';
         sortedTags.forEach(tagInfo => {
             const listItem = document.createElement('li');
@@ -45,25 +44,29 @@ document.addEventListener('DOMContentLoaded', async () => { // ★★★ async�
     };
 
     // --- メインの処理 ---
-    const allNotes = await fetchNotesFromAPI();
+    const allNotes = await fetchAllNotes();
+    renderTags(allNotes);
 
-    // タグリストを描画
-    const sortedTags = getSortedTags(allNotes);
-    renderTags(sortedTags);
-
-    // 詳細ページの表示処理
     const params = new URLSearchParams(window.location.search);
-    const noteId = parseInt(params.get('id'), 10);
-    const note = allNotes.find(n => n.id === noteId);
+    // ★★★ ここを修正しました ★★★
+    // parseInt()を削除し、IDを文字列として扱うように変更
+    const noteId = params.get('id'); 
 
-    if (note) {
-        document.title = note.title;
-        noteDetailContainer.innerHTML = `
-            <h1>${note.title}</h1>
-            <p class="content">${note.content}</p>
-            <p class="tags">${note.tags}</p>
-        `;
-    } else {
-        noteDetailContainer.innerHTML = '<h1>エラー</h1><p>指定された日記は見つかりませんでした。</p>';
+    if (noteId && allNotes.length > 0) {
+        // IDが文字列同士で比較されるようにする
+        const note = allNotes.find(n => n.id === noteId);
+
+        if (note) {
+            document.title = note.title;
+            noteDetailContainer.innerHTML = `
+                <h1>${note.title}</h1>
+                <p class="content">${note.content}</p>
+                <p class="tags">${note.tags}</p>
+            `;
+        } else {
+            showError('指定された日記は見つかりませんでした。');
+        }
+    } else if (!noteId) {
+        showError('表示する日記のIDが指定されていません。');
     }
 });

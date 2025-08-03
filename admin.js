@@ -1,4 +1,5 @@
 document.addEventListener('DOMContentLoaded', async () => {
+    // HTMLから要素を取得
     const noteForm = document.getElementById('note-form');
     const successMessage = document.getElementById('success-message');
     const errorMessageDiv = document.getElementById('error-message');
@@ -8,6 +9,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     const formSubmitButton = document.getElementById('form-submit-button');
     const formCancelButton = document.getElementById('form-cancel-button');
     const noteIdInput = document.getElementById('note-id');
+
+    // ★★★ ここから下を更新しました ★★★
+    // ページで読み込んだ日記データを保持するための変数
+    let loadedNotes = [];
 
     const showError = (message) => {
         errorMessageDiv.textContent = message;
@@ -20,7 +25,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         setTimeout(() => { successMessage.textContent = ''; }, 3000);
     };
 
-    // --- API呼び出し (本物) ---
+    // API呼び出しの定義 (変更なし)
     const api = {
         getNotes: async () => {
             const response = await fetch('/api/get-notes');
@@ -53,7 +58,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     };
 
-    // --- フォームの状態をリセット ---
+    // フォームの状態をリセットする関数 (変更なし)
     const resetForm = () => {
         noteForm.reset();
         noteIdInput.value = '';
@@ -62,7 +67,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         formCancelButton.style.display = 'none';
     };
 
-    // --- 日記リストを描画 ---
+    // 日記リストを描画する関数 (変更なし)
     const renderNoteList = (notes) => {
         noteList.innerHTML = '';
         if (!notes) return;
@@ -80,18 +85,19 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     };
 
-    // --- ページ全体の再読み込み ---
+    // ページ全体のデータを再読み込み・再描画する関数
     const refreshPage = async () => {
         try {
-            const notes = await api.getNotes();
-            renderNoteList(notes);
+            // APIから取得したデータをグローバル変数に保存
+            loadedNotes = await api.getNotes();
+            renderNoteList(loadedNotes);
         } catch (error) {
             console.error(error);
             showError('日記リストの読み込みに失敗しました。');
         }
     };
 
-    // --- フォーム送信処理 (作成/更新) ---
+    // フォーム送信処理 (変更なし)
     noteForm.addEventListener('submit', async (event) => {
         event.preventDefault();
         const id = noteIdInput.value || null;
@@ -117,28 +123,27 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 
-    // --- 編集/削除ボタンのイベント処理 ---
+    // 編集/削除ボタンのイベント処理
     noteList.addEventListener('click', async (event) => {
         const target = event.target;
         const id = target.dataset.id;
         if (!id) return;
 
         if (target.classList.contains('edit-button')) {
-            try {
-                const notes = await api.getNotes();
-                const note = notes.find(n => n.id === id);
-                if (note) {
-                    noteIdInput.value = note.id;
-                    document.getElementById('note-title').value = note.title;
-                    document.getElementById('note-content').value = note.content;
-                    document.getElementById('note-tags').value = note.tags;
-                    formTitle.textContent = '日記を編集';
-                    formSubmitButton.textContent = '更新する';
-                    formCancelButton.style.display = 'inline-block';
-                    window.scrollTo(0, 0);
-                }
-            } catch (error) {
-                showError('編集データの読み込みに失敗しました。');
+            // ★★★ ここを更新しました ★★★
+            // APIを再呼び出しせず、保持しているデータから日記を探す
+            const note = loadedNotes.find(n => n.id === id);
+            if (note) {
+                noteIdInput.value = note.id;
+                document.getElementById('note-title').value = note.title;
+                document.getElementById('note-content').value = note.content;
+                document.getElementById('note-tags').value = note.tags;
+                formTitle.textContent = '日記を編集';
+                formSubmitButton.textContent = '更新する';
+                formCancelButton.style.display = 'inline-block';
+                window.scrollTo(0, 0);
+            } else {
+                showError('編集対象の日記が見つかりませんでした。ページを再読み込みしてください。');
             }
         } else if (target.classList.contains('delete-button')) {
             if (confirm('本当にこの日記を削除しますか？')) {
@@ -154,10 +159,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
     
-    // キャンセルボタン
+    // キャンセルボタン (変更なし)
     formCancelButton.addEventListener('click', resetForm);
 
-    // ログアウトボタン
+    // ログアウトボタン (変更なし)
     logoutButton.addEventListener('click', (event) => {
         event.preventDefault();
         sessionStorage.removeItem('isLoggedIn');
