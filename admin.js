@@ -27,7 +27,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     // API呼び出しの定義
     const api = {
         getNotes: async () => {
-            const response = await fetch('/api/get-notes');
+            // ページネーションを無視して全件取得
+            const response = await fetch('/api/get-notes?pageSize=1000'); 
             if (!response.ok) throw new Error('Failed to fetch notes');
             return await response.json();
         },
@@ -86,7 +87,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         loader.style.display = 'block';
         noteList.style.display = 'none';
         try {
-            loadedNotes = await api.getNotes();
+            // ★★★ ここを更新しました ★★★
+            // APIからの応答(オブジェクト)を受け取り、その中のnotes配列を使う
+            const response = await api.getNotes();
+            loadedNotes = response.notes; 
             renderNoteList(loadedNotes);
         } catch (error) {
             console.error(error);
