@@ -12,6 +12,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const showError = (message) => {
         errorMessageDiv.textContent = message;
         errorMessageDiv.style.display = 'block';
+        setTimeout(() => { errorMessageDiv.style.display = 'none'; }, 5000);
     };
 
     const showSuccess = (message) => {
@@ -19,29 +20,36 @@ document.addEventListener('DOMContentLoaded', async () => {
         setTimeout(() => { successMessage.textContent = ''; }, 3000);
     };
 
-    // --- API呼び出し (シミュレーション) ---
+    // --- API呼び出し (本物) ---
     const api = {
-        getNotes: async () => Promise.resolve(notesData),
+        getNotes: async () => {
+            const response = await fetch('/api/get-notes');
+            if (!response.ok) throw new Error('Failed to fetch notes');
+            return await response.json();
+        },
         createNote: async (note) => {
-            const newNote = { ...note, id: Date.now() };
-            notesData.unshift(newNote);
-            return Promise.resolve(newNote);
+            const response = await fetch('/api/create-note', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(note)
+            });
+            if (!response.ok) throw new Error('Failed to create note');
+            return await response.json();
         },
         updateNote: async (note) => {
-            const index = notesData.findIndex(n => n.id === note.id);
-            if (index > -1) {
-                notesData[index] = { ...notesData[index], ...note };
-                return Promise.resolve(notesData[index]);
-            }
-            return Promise.reject('Note not found');
+            const response = await fetch('/api/update-note', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(note)
+            });
+            if (!response.ok) throw new Error('Failed to update note');
+            return await response.json();
         },
         deleteNote: async (id) => {
-            const index = notesData.findIndex(n => n.id === id);
-            if (index > -1) {
-                notesData.splice(index, 1);
-                return Promise.resolve({ message: 'Deleted' });
-            }
-            return Promise.reject('Note not found');
+            const response = await fetch(`/api/delete-note?id=${id}`, {
+                method: 'DELETE'
+            });
+            if (!response.ok) throw new Error('Failed to delete note');
         }
     };
 
@@ -57,6 +65,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // --- 日記リストを描画 ---
     const renderNoteList = (notes) => {
         noteList.innerHTML = '';
+        if (!notes) return;
         notes.forEach(note => {
             const item = document.createElement('li');
             item.className = 'note-list-item';
@@ -77,6 +86,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const notes = await api.getNotes();
             renderNoteList(notes);
         } catch (error) {
+            console.error(error);
             showError('日記リストの読み込みに失敗しました。');
         }
     };
@@ -84,7 +94,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // --- フォーム送信処理 (作成/更新) ---
     noteForm.addEventListener('submit', async (event) => {
         event.preventDefault();
-        const id = noteIdInput.value ? parseInt(noteIdInput.value, 10) : null;
+        const id = noteIdInput.value || null;
         const noteData = {
             title: document.getElementById('note-title').value,
             content: document.getElementById('note-content').value,
@@ -93,17 +103,16 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         try {
             if (id) {
-                // 更新
                 await api.updateNote({ ...noteData, id });
                 showSuccess('日記を更新しました！');
             } else {
-                // 新規作成
                 await api.createNote(noteData);
                 showSuccess('新しい日記を投稿しました！');
             }
             resetForm();
-            refreshPage();
+            await refreshPage();
         } catch (error) {
+            console.error(error);
             showError('操作に失敗しました。');
         }
     });
@@ -111,30 +120,36 @@ document.addEventListener('DOMContentLoaded', async () => {
     // --- 編集/削除ボタンのイベント処理 ---
     noteList.addEventListener('click', async (event) => {
         const target = event.target;
-        const id = target.dataset.id ? parseInt(target.dataset.id, 10) : null;
+        const id = target.dataset.id;
         if (!id) return;
 
         if (target.classList.contains('edit-button')) {
-            // 編集
-            const note = notesData.find(n => n.id === id);
-            if (note) {
-                noteIdInput.value = note.id;
-                document.getElementById('note-title').value = note.title;
-                document.getElementById('note-content').value = note.content;
-                document.getElementById('note-tags').value = note.tags;
-                formTitle.textContent = '日記を編集';
-                formSubmitButton.textContent = '更新する';
-                formCancelButton.style.display = 'inline-block';
-                window.scrollTo(0, 0);
+            try {
+                const notes = await api.getNotes();
+                const note = notes.find(n => n.id === id);
+                if (note) {
+                    noteIdInput.value = note.id;
+                    document.getElementById('note-title').value = note.title;
+                    document.getElementById('note-content').value = note.content;
+                    document.getElementById('note-tags').value = note.tags;
+                    formTitle.textContent = '日記を編集';
+                    formSubmitButton.textContent = '更新する';
+                    formCancelButton.style.display = 'inline-block';
+                    window.scrollTo(0, 0);
+                }
+            } catch (error) {
+                showError('編集データの読み込みに失敗しました。');
             }
         } else if (target.classList.contains('delete-button')) {
-            // 削除
-            try {
-                await api.deleteNote(id);
-                showSuccess('日記を削除しました。');
-                refreshPage();
-            } catch (error) {
-                showError('削除に失敗しました。');
+            if (confirm('本当にこの日記を削除しますか？')) {
+                try {
+                    await api.deleteNote(id);
+                    showSuccess('日記を削除しました。');
+                    await refreshPage();
+                } catch (error) {
+                    console.error(error);
+                    showError('削除に失敗しました。');
+                }
             }
         }
     });
@@ -150,5 +165,5 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     // --- 初期表示 ---
-    refreshPage();
+    await refreshPage();
 });
