@@ -3,7 +3,6 @@ document.addEventListener('DOMContentLoaded', async () => { // ★★★ async�
     const noteDetailContainer = document.getElementById('note-detail-container');
     const tagListContainer = document.getElementById('tag-list');
 
-    // ★★★ ここから下を新規追加 ★★★
     /**
      * APIからデータを取得する処理をシミュレートする関数。
      */
@@ -11,7 +10,6 @@ document.addEventListener('DOMContentLoaded', async () => { // ★★★ async�
         console.log('Fetching data (simulation)...');
         return Promise.resolve(notesData);
     };
-    // ★★★ ここまで新規追加 ★★★
 
     /**
      * 全ての日記データからタグを集計し、頻度順にソートして返す関数
