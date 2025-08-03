@@ -87,8 +87,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         loader.style.display = 'block';
         noteList.style.display = 'none';
         try {
-            // ★★★ ここを更新しました ★★★
-            // APIからの応答(オブジェクト)を受け取り、その中のnotes配列を使う
             const response = await api.getNotes();
             loadedNotes = response.notes; 
             renderNoteList(loadedNotes);
@@ -146,15 +144,15 @@ document.addEventListener('DOMContentLoaded', async () => {
                 showError('編集対象の日記が見つかりませんでした。ページを再読み込みしてください。');
             }
         } else if (target.classList.contains('delete-button')) {
-            if (confirm('本当にこの日記を削除しますか？')) {
-                try {
-                    await api.deleteNote(id);
-                    showSuccess('日記を削除しました。');
-                    await refreshPage();
-                } catch (error) {
-                    console.error(error);
-                    showError('削除に失敗しました。');
-                }
+            // ★★★ ここを更新しました ★★★
+            // confirmによる確認を削除し、即座に削除処理を実行します
+            try {
+                await api.deleteNote(id);
+                showSuccess('日記を削除しました。');
+                await refreshPage();
+            } catch (error) {
+                console.error(error);
+                showError('削除に失敗しました。');
             }
         }
     });
