@@ -4,16 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>管理画面</title>
-    
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <script>
         if (sessionStorage.getItem('isLoggedIn') !== 'true') {
-            window.location.href = '/login.html';
+            window.location.href = 'login.html';
         }
     </script>
 
@@ -53,6 +49,19 @@
                 <ul id="note-list" class="note-list"></ul>
             </section>
         </main>
+    </div>
+
+    <!-- 削除確認モーダル -->
+    <div id="delete-modal" class="modal-container">
+        <div class="modal-overlay"></div>
+        <div class="modal-content">
+            <h3>日記の削除</h3>
+            <p>本当にこの日記を削除しますか？<br>この操作は取り消せません。</p>
+            <div class="modal-actions">
+                <button id="modal-confirm-delete" class="delete-button">はい、削除します</button>
+                <button id="modal-cancel-delete" class="cancel-button">キャンセル</button>
+            </div>
+        </div>
     </div>
 
     <script src="admin.js"></script>

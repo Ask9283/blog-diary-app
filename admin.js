@@ -10,8 +10,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     const formCancelButton = document.getElementById('form-cancel-button');
     const noteIdInput = document.getElementById('note-id');
     const loader = document.getElementById('loader');
+    
+    // 削除モーダル関連の要素
+    const deleteModal = document.getElementById('delete-modal');
+    const confirmDeleteBtn = document.getElementById('modal-confirm-delete');
+    const cancelDeleteBtn = document.getElementById('modal-cancel-delete');
+    const modalOverlay = deleteModal.querySelector('.modal-overlay');
 
     let loadedNotes = [];
+    let noteIdToDelete = null;
 
     const showError = (message) => {
         errorMessageDiv.textContent = message;
@@ -27,7 +34,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     // API呼び出しの定義
     const api = {
         getNotes: async () => {
-            // ページネーションを無視して全件取得
             const response = await fetch('/api/get-notes?pageSize=1000'); 
             if (!response.ok) throw new Error('Failed to fetch notes');
             return await response.json();
@@ -124,7 +130,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 
-    noteList.addEventListener('click', async (event) => {
+    noteList.addEventListener('click', (event) => {
         const target = event.target;
         const id = target.dataset.id;
         if (!id) return;
@@ -140,22 +146,35 @@ document.addEventListener('DOMContentLoaded', async () => {
                 formSubmitButton.textContent = '更新する';
                 formCancelButton.style.display = 'inline-block';
                 window.scrollTo(0, 0);
-            } else {
-                showError('編集対象の日記が見つかりませんでした。ページを再読み込みしてください。');
             }
         } else if (target.classList.contains('delete-button')) {
-            // ★★★ ここを更新しました ★★★
-            // confirmによる確認を削除し、即座に削除処理を実行します
-            try {
-                await api.deleteNote(id);
-                showSuccess('日記を削除しました。');
-                await refreshPage();
-            } catch (error) {
-                console.error(error);
-                showError('削除に失敗しました。');
-            }
+            noteIdToDelete = id;
+            deleteModal.classList.add('is-open');
         }
     });
+    
+    // --- 削除モーダルのロジック ---
+    const closeDeleteModal = () => {
+        deleteModal.classList.remove('is-open');
+        noteIdToDelete = null;
+    };
+
+    confirmDeleteBtn.addEventListener('click', async () => {
+        if (!noteIdToDelete) return;
+        try {
+            await api.deleteNote(noteIdToDelete);
+            showSuccess('日記を削除しました。');
+            await refreshPage();
+        } catch (error) {
+            console.error(error);
+            showError('削除に失敗しました。');
+        } finally {
+            closeDeleteModal();
+        }
+    });
+
+    cancelDeleteBtn.addEventListener('click', closeDeleteModal);
+    modalOverlay.addEventListener('click', closeDeleteModal);
     
     formCancelButton.addEventListener('click', resetForm);
 
