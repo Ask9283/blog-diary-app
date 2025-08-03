@@ -5,25 +5,27 @@ document.addEventListener('DOMContentLoaded', async () => {
     const loader = document.getElementById('loader');
 
     const showError = (message) => {
-        loader.style.display = 'none';
+        if(loader) loader.style.display = 'none';
         errorMessageDiv.textContent = message;
         errorMessageDiv.style.display = 'block';
     };
 
     const fetchAllNotes = async () => {
         try {
-            const response = await fetch('/api/get-notes');
+            // ページネーションを無視して全件取得するために、pageSizeを大きな値に設定
+            const response = await fetch('/api/get-notes?pageSize=1000'); 
             if (!response.ok) throw new Error('Failed to fetch notes');
             return await response.json();
         } catch (error) {
             console.error(error);
             showError('日記データの読み込みに失敗しました。');
-            return [];
+            return { notes: [] }; // APIの形式に合わせて空のオブジェクトを返す
         }
     };
 
     const renderTags = (allNotes) => {
         const tagCounts = {};
+        if (!allNotes) return;
         allNotes.forEach(note => {
             if (!note.tags) return;
             const tags = note.tags.split(' ').filter(tag => tag.startsWith('#'));
@@ -45,20 +47,24 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
 
     const loadPage = async () => {
-        loader.style.display = 'block';
+        if(loader) loader.style.display = 'block';
         try {
-            const allNotes = await fetchAllNotes();
+            // ★★★ ここから下を更新しました ★★★
+            // APIからの応答(オブジェクト)をapiResponseとして受け取る
+            const apiResponse = await fetchAllNotes();
+            // その中から日記の配列(notes)を取り出す
+            const allNotes = apiResponse.notes; 
+
             renderTags(allNotes);
 
             const params = new URLSearchParams(window.location.search);
             const noteId = params.get('id'); 
 
-            if (noteId && allNotes.length > 0) {
+            if (noteId && allNotes && allNotes.length > 0) {
                 const note = allNotes.find(n => n.id === noteId);
 
                 if (note) {
                     document.title = note.title;
-                    // ローダーを消してから中身を挿入
                     noteDetailContainer.innerHTML = `
                         <h1>${note.title}</h1>
                         <p class="content">${note.content}</p>
@@ -71,8 +77,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 showError('表示する日記のIDが指定されていません。');
             }
         } finally {
-            // エラーがあってもなくても、最終的にローダーは非表示にする
-            // ただし、中身が表示される場合はinnerHTMLで上書きされるので不要
             if (loader) {
                  loader.style.display = 'none';
             }
