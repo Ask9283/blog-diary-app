@@ -31,7 +31,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             return { notes: [], totalItems: 0 };
         }
     };
-
+    
+    // この関数は変更ありません
     const renderCards = (notes) => {
         cardGrid.innerHTML = '';
         if (!notes || notes.length === 0) {
@@ -53,6 +54,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     };
     
+    // この関数は変更ありません
     const renderPagination = (totalItems) => {
         paginationContainer.innerHTML = '';
         const totalPages = Math.ceil(totalItems / pageSize);
@@ -73,9 +75,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     };
 
+    // この関数は変更ありません
     const getSortedTags = (notes) => {
         const tagCounts = {};
         notes.forEach(note => {
+            if (!note.tags) return;
             const tags = note.tags.split(' ').filter(tag => tag.startsWith('#'));
             tags.forEach(tag => {
                 if (tag) tagCounts[tag] = (tagCounts[tag] || 0) + 1;
@@ -84,6 +88,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         return Object.entries(tagCounts).sort((a, b) => b[1] - a[1]).map(item => ({ tag: item[0], count: item[1] }));
     };
 
+    // この関数は変更ありません
     const renderTags = (allNotes) => {
         const sortedTags = getSortedTags(allNotes);
         tagListContainer.innerHTML = '';
@@ -125,5 +130,5 @@ document.addEventListener('DOMContentLoaded', async () => {
         searchBox.value = searchParam;
     }
     
-    loadNotes();
+    await loadNotes();
 });
