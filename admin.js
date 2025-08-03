@@ -11,6 +11,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const noteIdInput = document.getElementById('note-id');
     const loader = document.getElementById('loader');
     
+    // ★★★ ここから下を新規追加 ★★★
     // 削除モーダル関連の要素
     const deleteModal = document.getElementById('delete-modal');
     const confirmDeleteBtn = document.getElementById('modal-confirm-delete');
@@ -18,7 +19,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const modalOverlay = deleteModal.querySelector('.modal-overlay');
 
     let loadedNotes = [];
-    let noteIdToDelete = null;
+    let noteIdToDelete = null; // 削除対象のIDを一時的に保持する変数
 
     const showError = (message) => {
         errorMessageDiv.textContent = message;
@@ -148,6 +149,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 window.scrollTo(0, 0);
             }
         } else if (target.classList.contains('delete-button')) {
+            // ★★★ ここを更新しました ★★★
+            // confirmの代わりにモーダルを表示する
             noteIdToDelete = id;
             deleteModal.classList.add('is-open');
         }
