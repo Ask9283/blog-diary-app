@@ -11,7 +11,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const noteIdInput = document.getElementById('note-id');
     const loader = document.getElementById('loader');
     
-    // 削除モーダル関連の要素
     const deleteModal = document.getElementById('delete-modal');
     const confirmDeleteBtn = document.getElementById('modal-confirm-delete');
     const cancelDeleteBtn = document.getElementById('modal-cancel-delete');
@@ -56,11 +55,21 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (!response.ok) throw new Error('Failed to update note');
             return await response.json();
         },
+        // ★★★ ここから下を更新しました ★★★
         deleteNote: async (id) => {
             const response = await fetch(`/api/delete-note?id=${id}`, {
                 method: 'DELETE'
             });
-            if (!response.ok) throw new Error('Failed to delete note');
+            // 失敗した場合、APIからの詳細なエラーメッセージを解析して投げる
+            if (!response.ok) {
+                let errorBody;
+                try {
+                    errorBody = await response.json();
+                } catch (e) {
+                    errorBody = { message: 'APIからエラーの詳細を取得できませんでした。' };
+                }
+                throw new Error(errorBody.message || '不明なエラーが発生しました。');
+            }
         }
     };
 
@@ -153,7 +162,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
     
-    // --- 削除モーダルのロジック ---
+    // 削除モーダルのロジック
     const closeDeleteModal = () => {
         deleteModal.classList.remove('is-open');
         noteIdToDelete = null;
@@ -167,7 +176,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             await refreshPage();
         } catch (error) {
             console.error(error);
-            showError('削除に失敗しました。');
+            // ★★★ ここを更新しました ★★★
+            // 詳細なエラーメッセージを表示する
+            showError(`削除に失敗しました: ${error.message}`);
         } finally {
             closeDeleteModal();
         }
