@@ -5,8 +5,7 @@ module.exports = async function (context, req) {
     const noteId = req.query.id;
 
     if (!noteId) {
-        context.res = { status: 400, body: "Note ID is required" };
-        return;
+        return context.res = { status: 400, body: "Note ID is required" };
     }
 
     try {
@@ -18,9 +17,7 @@ module.exports = async function (context, req) {
             status: 204 // Success, No Content
         };
     } catch (error) {
-        // エラーをログに記録
         context.log.error(`Error deleting note ${noteId}:`, error);
-        
         context.res = {
             status: 500,
             body: `Error deleting note: ${error.message}`
