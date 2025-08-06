@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>(仮) - 一覧</title>
+    <title>Scrapbox風日記 - 一覧</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
@@ -19,6 +19,7 @@
                 <input type="search" placeholder="ページを検索..." class="search-box">
                 <nav class="page-list">
                     <h4>タグ一覧</h4>
+                    <div id="loader-tags" class="loader"></div>
                     <ul id="tag-list"></ul>
                 </nav>
             </div>
@@ -29,12 +30,12 @@
                 <h1>日記一覧</h1>
             </div>
             <div id="error-message" class="error-message"></div>
+            <div id="loader-main" class="loader"></div>
             <div class="card-grid" id="card-grid"></div>
             <div class="pagination-container" id="pagination-container"></div>
         </main>
     </div>
 
-    <script src="data.js"></script>
     <script src="app.js"></script>
 </body>
 </html>

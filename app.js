@@ -4,6 +4,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     const tagListContainer = document.getElementById('tag-list');
     const paginationContainer = document.getElementById('pagination-container');
     const errorMessageDiv = document.getElementById('error-message');
+    // ローダー要素を取得
+    const loaderMain = document.getElementById('loader-main');
+    const loaderTags = document.getElementById('loader-tags');
 
     let currentPage = 1;
     const pageSize = 6;
@@ -40,10 +43,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
         notes.forEach(note => {
             const link = document.createElement('a');
-            // ★★★ ここを修正しました ★★★
-            // リンク先を必ず note.html に設定します
             link.href = `note.html?id=${note.id}`; 
-            
             const card = document.createElement('article');
             card.className = 'card';
             card.innerHTML = `
@@ -78,6 +78,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const getSortedTags = (notes) => {
         const tagCounts = {};
+        if (!notes) return {};
         notes.forEach(note => {
             if (!note.tags) return;
             const tags = note.tags.split(' ').filter(tag => tag.startsWith('#'));
@@ -108,10 +109,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
 
     const loadNotes = async () => {
-        const searchTerm = searchBox.value;
-        const { notes, totalItems } = await fetchNotesFromAPI(currentPage, searchTerm);
-        renderCards(notes);
-        renderPagination(totalItems);
+        loaderMain.style.display = 'block';
+        cardGrid.style.display = 'none';
+        paginationContainer.style.display = 'none';
+        try {
+            const searchTerm = searchBox.value;
+            const { notes, totalItems } = await fetchNotesFromAPI(currentPage, searchTerm);
+            renderCards(notes);
+            renderPagination(totalItems);
+        } finally {
+            loaderMain.style.display = 'none';
+            cardGrid.style.display = 'grid';
+            paginationContainer.style.display = 'flex';
+        }
     };
 
     searchBox.addEventListener('input', () => {
@@ -120,14 +130,25 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     // --- 初期表示処理 ---
-    const { notes: allNotesForTags } = await fetchNotesFromAPI(1, '');
-    renderTags(allNotesForTags);
-    
-    const params = new URLSearchParams(window.location.search);
-    const searchParam = params.get('search');
-    if (searchParam) {
-        searchBox.value = searchParam;
-    }
-    
-    await loadNotes();
+    const initializePage = async () => {
+        loaderTags.style.display = 'block';
+        tagListContainer.style.display = 'none';
+        try {
+            const { notes: allNotesForTags } = await fetchNotesFromAPI(1, '');
+            renderTags(allNotesForTags);
+        } finally {
+            loaderTags.style.display = 'none';
+            tagListContainer.style.display = 'block';
+        }
+        
+        const params = new URLSearchParams(window.location.search);
+        const searchParam = params.get('search');
+        if (searchParam) {
+            searchBox.value = searchParam;
+        }
+        
+        await loadNotes();
+    };
+
+    await initializePage();
 });
