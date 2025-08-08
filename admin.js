@@ -14,7 +14,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const uploadStatus = document.getElementById('upload-status');
     const noteContentTextarea = document.getElementById('note-content');
     
-    // 削除モーダル関連の要素
     const deleteModal = document.getElementById('delete-modal');
     const confirmDeleteBtn = document.getElementById('modal-confirm-delete');
     const cancelDeleteBtn = document.getElementById('modal-cancel-delete');
@@ -34,7 +33,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         setTimeout(() => { successMessage.textContent = ''; }, 3000);
     };
 
-    // API呼び出しの定義
     const api = {
         getNotes: async () => {
             const response = await fetch('/api/get-notes?pageSize=1000'); 
@@ -81,13 +79,28 @@ document.addEventListener('DOMContentLoaded', async () => {
         notes.forEach(note => {
             const item = document.createElement('li');
             item.className = 'note-list-item';
+
+            // ★★★ ここから下を更新しました ★★★
+            // 本文から最初の画像URLを抽出する
+            const imageRegex = /!\[.*?\]\((.*?)\)/;
+            const match = note.content.match(imageRegex);
+            let imagePreview = '';
+
+            if (match) {
+                // 画像が見つかった場合、サムネイルを表示
+                imagePreview = `<img src="${match[1]}" alt="preview" class="note-list-item-thumbnail">`;
+            }
+
             item.innerHTML = `
+                ${imagePreview}
                 <span class="note-list-item-title">${note.title}</span>
                 <div class="note-list-item-actions">
                     <button class="edit-button" data-id="${note.id}">編集</button>
                     <button class="delete-button" data-id="${note.id}">削除</button>
                 </div>
             `;
+            // ★★★ ここまで更新 ★★★
+
             noteList.appendChild(item);
         });
     };
@@ -156,7 +169,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
     
-    // --- 画像アップロード処理 ---
     imageUploadInput.addEventListener('change', async (event) => {
         const file = event.target.files[0];
         if (!file) return;
@@ -172,20 +184,16 @@ document.addEventListener('DOMContentLoaded', async () => {
                 body: formData 
             });
 
-            // 先にレスポンスが成功したかを確認する
             if (!response.ok) {
                 let errorResult;
                 try {
-                    // エラー内容がJSON形式で返ってくることを期待する
                     errorResult = await response.json();
                 } catch (e) {
-                    // JSONでなければ、ステータスコードでエラーを作成
                     errorResult = { message: `アップロードに失敗しました。 (Status: ${response.status})` };
                 }
                 throw new Error(errorResult.message);
             }
 
-            // 成功した場合のみJSONをパースする
             const result = await response.json();
             const imageUrl = result.imageUrl;
             const markdownImage = `\n![${file.name}](${imageUrl})\n`;
@@ -194,11 +202,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             uploadStatus.textContent = '完了！';
         } catch (error) {
             console.error('Upload error:', error);
-            // 詳細なエラーメッセージを画面に表示
             uploadStatus.textContent = `失敗: ${error.message}`;
         } finally {
             imageUploadInput.value = '';
-            // 完了メッセージは残し、エラーメッセージは少し長めに表示
             if (uploadStatus.textContent === '完了！') {
                 setTimeout(() => { uploadStatus.textContent = ''; }, 3000);
             } else {
@@ -207,7 +213,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 
-    // --- 削除モーダルのロジック ---
     const closeDeleteModal = () => {
         deleteModal.classList.remove('is-open');
         noteIdToDelete = null;
