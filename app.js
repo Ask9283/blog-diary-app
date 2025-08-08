@@ -131,23 +131,42 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // --- 初期表示処理 ---
     const initializePage = async () => {
+        // ★★★ ここから下を更新しました ★★★
+        // 両方のローダーを同時に表示
         loaderTags.style.display = 'block';
         tagListContainer.style.display = 'none';
+        loaderMain.style.display = 'block';
+        cardGrid.style.display = 'none';
+        paginationContainer.style.display = 'none';
+
         try {
-            const { notes: allNotesForTags } = await fetchNotesFromAPI(1, '');
-            renderTags(allNotesForTags);
+            // URLパラメータを先に処理
+            const params = new URLSearchParams(window.location.search);
+            const searchParam = params.get('search');
+            if (searchParam) {
+                searchBox.value = searchParam;
+            }
+
+            // タグ一覧の取得と、日記一覧の取得を同時に開始する
+            const tagsPromise = fetchNotesFromAPI(1, ''); // タグは全件から生成
+            const notesPromise = fetchNotesFromAPI(currentPage, searchBox.value);
+
+            // 両方の処理が終わるのを待つ
+            const [tagsResult, notesResult] = await Promise.all([tagsPromise, notesPromise]);
+
+            // 結果を画面に反映
+            renderTags(tagsResult.notes);
+            renderCards(notesResult.notes);
+            renderPagination(notesResult.totalItems);
+
         } finally {
+            // 両方のローダーを同時に非表示
             loaderTags.style.display = 'none';
             tagListContainer.style.display = 'block';
+            loaderMain.style.display = 'none';
+            cardGrid.style.display = 'grid';
+            paginationContainer.style.display = 'flex';
         }
-        
-        const params = new URLSearchParams(window.location.search);
-        const searchParam = params.get('search');
-        if (searchParam) {
-            searchBox.value = searchParam;
-        }
-        
-        await loadNotes();
     };
 
     await initializePage();
