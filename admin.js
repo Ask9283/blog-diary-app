@@ -162,31 +162,33 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (!file) return;
 
         uploadStatus.textContent = 'アップロード中...';
+        
+        // ★★★ ここから下を更新しました ★★★
+        // FormDataオブジェクトを作成して、ファイルを追加する
         const formData = new FormData();
         formData.append('file', file);
 
         try {
+            // bodyにformDataを指定して送信する
             const response = await fetch('/api/upload-image', {
                 method: 'POST',
-                body: file // formDataではなく直接fileを送信
+                body: formData 
             });
 
             if (!response.ok) {
-                throw new Error('Upload failed');
+                throw new Error(`Upload failed with status: ${response.status}`);
             }
 
             const result = await response.json();
             const imageUrl = result.imageUrl;
             const markdownImage = `\n![${file.name}](${imageUrl})\n`;
             
-            // 現在のカーソル位置に挿入、または末尾に追加
             noteContentTextarea.value += markdownImage;
             uploadStatus.textContent = '完了！';
         } catch (error) {
             console.error('Upload error:', error);
             uploadStatus.textContent = 'アップロードに失敗しました。';
         } finally {
-            // inputをリセットして同じファイルを再度選択できるようにする
             imageUploadInput.value = '';
             setTimeout(() => { uploadStatus.textContent = ''; }, 3000);
         }
