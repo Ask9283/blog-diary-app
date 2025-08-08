@@ -4,7 +4,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const tagListContainer = document.getElementById('tag-list');
     const paginationContainer = document.getElementById('pagination-container');
     const errorMessageDiv = document.getElementById('error-message');
-    // ローダー要素を取得
     const loaderMain = document.getElementById('loader-main');
     const loaderTags = document.getElementById('loader-tags');
 
@@ -46,11 +45,30 @@ document.addEventListener('DOMContentLoaded', async () => {
             link.href = `note.html?id=${note.id}`; 
             const card = document.createElement('article');
             card.className = 'card';
+
+            // ★★★ ここから下を更新しました ★★★
+            // 本文から最初の画像URLを抽出する
+            const imageRegex = /!\[.*?\]\((.*?)\)/;
+            const match = note.content.match(imageRegex);
+            let contentPreview;
+
+            if (match) {
+                // 画像が見つかった場合、画像プレビューを表示
+                contentPreview = `<div class="card-image-preview" style="background-image: url('${match[1]}')"></div>`;
+            } else {
+                // 画像が見つからない場合、テキストプレビューを表示
+                contentPreview = `<p class="card-content-preview">${note.content}</p>`;
+            }
+
             card.innerHTML = `
-                <h3>${note.title}</h3>
-                <p class="card-content-preview">${note.content}</p>
-                <p class="card-tags">${note.tags}</p>
+                ${contentPreview}
+                <div class="card-text-content">
+                    <h3>${note.title}</h3>
+                    <p class="card-tags">${note.tags || ''}</p>
+                </div>
             `;
+            // ★★★ ここまで更新 ★★★
+
             link.appendChild(card);
             cardGrid.appendChild(link);
         });
@@ -131,8 +149,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // --- 初期表示処理 ---
     const initializePage = async () => {
-        // ★★★ ここから下を更新しました ★★★
-        // 両方のローダーを同時に表示
         loaderTags.style.display = 'block';
         tagListContainer.style.display = 'none';
         loaderMain.style.display = 'block';
@@ -140,27 +156,22 @@ document.addEventListener('DOMContentLoaded', async () => {
         paginationContainer.style.display = 'none';
 
         try {
-            // URLパラメータを先に処理
             const params = new URLSearchParams(window.location.search);
             const searchParam = params.get('search');
             if (searchParam) {
                 searchBox.value = searchParam;
             }
 
-            // タグ一覧の取得と、日記一覧の取得を同時に開始する
-            const tagsPromise = fetchNotesFromAPI(1, ''); // タグは全件から生成
+            const tagsPromise = fetchNotesFromAPI(1, '');
             const notesPromise = fetchNotesFromAPI(currentPage, searchBox.value);
 
-            // 両方の処理が終わるのを待つ
             const [tagsResult, notesResult] = await Promise.all([tagsPromise, notesPromise]);
 
-            // 結果を画面に反映
             renderTags(tagsResult.notes);
             renderCards(notesResult.notes);
             renderPagination(notesResult.totalItems);
 
         } finally {
-            // 両方のローダーを同時に非表示
             loaderTags.style.display = 'none';
             tagListContainer.style.display = 'block';
             loaderMain.style.display = 'none';
