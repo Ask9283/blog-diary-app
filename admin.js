@@ -172,13 +172,21 @@ document.addEventListener('DOMContentLoaded', async () => {
                 body: formData 
             });
 
-            const result = await response.json();
-
+            // 先にレスポンスが成功したかを確認する
             if (!response.ok) {
-                // APIから返された詳細なエラーメッセージをスローする
-                throw new Error(result.message || `Upload failed with status: ${response.status}`);
+                let errorResult;
+                try {
+                    // エラー内容がJSON形式で返ってくることを期待する
+                    errorResult = await response.json();
+                } catch (e) {
+                    // JSONでなければ、ステータスコードでエラーを作成
+                    errorResult = { message: `アップロードに失敗しました。 (Status: ${response.status})` };
+                }
+                throw new Error(errorResult.message);
             }
 
+            // 成功した場合のみJSONをパースする
+            const result = await response.json();
             const imageUrl = result.imageUrl;
             const markdownImage = `\n![${file.name}](${imageUrl})\n`;
             
