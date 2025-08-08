@@ -34,7 +34,6 @@
                     <input type="text" id="note-title" placeholder="タイトル" required>
                     <textarea id="note-content" placeholder="内容" rows="5" required></textarea>
                     
-                    <!-- 画像アップロード機能を追加 -->
                     <div class="image-upload-container">
                         <label for="image-upload">画像を挿入:</label>
                         <input type="file" id="image-upload" accept="image/*">
@@ -49,6 +48,15 @@
                 </form>
                  <p id="success-message" class="success-message"></p>
             </section>
+
+            <!-- ★★★ ここから下を新規追加 ★★★ -->
+            <section class="live-preview-container">
+                <h2>ライブプレビュー</h2>
+                <div id="live-preview" class="note-detail-container">
+                    <p class="preview-placeholder">ここに本文のプレビューが表示されます。</p>
+                </div>
+            </section>
+            <!-- ★★★ ここまで新規追加 ★★★ -->
 
             <section class="note-list-container">
                 <h2>投稿済みの日記一覧</h2>

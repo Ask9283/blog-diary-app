@@ -13,6 +13,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const imageUploadInput = document.getElementById('image-upload');
     const uploadStatus = document.getElementById('upload-status');
     const noteContentTextarea = document.getElementById('note-content');
+    const livePreview = document.getElementById('live-preview');
     
     const deleteModal = document.getElementById('delete-modal');
     const confirmDeleteBtn = document.getElementById('modal-confirm-delete');
@@ -65,12 +66,41 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     };
 
+    // ★★★ ここから下を新規追加 ★★★
+    // note.jsから持ってきた、本文を解析する関数
+    const parseContent = (content, allNotes) => {
+        if (!content) return '<p class="preview-placeholder">ここに本文のプレビューが表示されます。</p>';
+        let parsed = content.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        const wikiLinkRegex = /\[\[(.*?)\]\]/g;
+        parsed = parsed.replace(wikiLinkRegex, (match, title) => {
+            const linkedNote = allNotes.find(note => note.title.trim() === title.trim());
+            if (linkedNote) {
+                return `<a href="note.html?id=${linkedNote.id}" class="wiki-link" target="_blank">${title}</a>`;
+            } else {
+                return `<span class="new-page-link">${title}</span>`;
+            }
+        });
+        const imageRegex = /!\[(.*?)\]\((.*?)\)/g;
+        parsed = parsed.replace(imageRegex, (match, alt, src) => {
+            return `<img src="${src}" alt="${alt}" class="embedded-image">`;
+        });
+        return parsed;
+    };
+
+    // プレビューを更新する関数
+    const updatePreview = () => {
+        const content = noteContentTextarea.value;
+        livePreview.innerHTML = `<div class="content">${parseContent(content, loadedNotes)}</div>`;
+    };
+    // ★★★ ここまで新規追加 ★★★
+
     const resetForm = () => {
         noteForm.reset();
         noteIdInput.value = '';
         formTitle.textContent = '新しい日記を追加';
         formSubmitButton.textContent = 'この内容で投稿する';
         formCancelButton.style.display = 'none';
+        updatePreview(); // プレビューもリセット
     };
 
     const renderNoteList = (notes) => {
@@ -79,18 +109,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         notes.forEach(note => {
             const item = document.createElement('li');
             item.className = 'note-list-item';
-
-            // ★★★ ここから下を更新しました ★★★
-            // 本文から最初の画像URLを抽出する
             const imageRegex = /!\[.*?\]\((.*?)\)/;
             const match = note.content.match(imageRegex);
             let imagePreview = '';
-
             if (match) {
-                // 画像が見つかった場合、サムネイルを表示
                 imagePreview = `<img src="${match[1]}" alt="preview" class="note-list-item-thumbnail">`;
             }
-
             item.innerHTML = `
                 ${imagePreview}
                 <span class="note-list-item-title">${note.title}</span>
@@ -99,8 +123,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <button class="delete-button" data-id="${note.id}">削除</button>
                 </div>
             `;
-            // ★★★ ここまで更新 ★★★
-
             noteList.appendChild(item);
         });
     };
@@ -112,6 +134,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const response = await api.getNotes();
             loadedNotes = response.notes; 
             renderNoteList(loadedNotes);
+            updatePreview(); // ページ読み込み時にもプレビューを初期化
         } catch (error) {
             console.error(error);
             showError('日記リストの読み込みに失敗しました。');
@@ -162,6 +185,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 formSubmitButton.textContent = '更新する';
                 formCancelButton.style.display = 'inline-block';
                 window.scrollTo(0, 0);
+                updatePreview(); // 編集時にもプレビューを更新
             }
         } else if (target.classList.contains('delete-button')) {
             noteIdToDelete = id;
@@ -172,18 +196,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     imageUploadInput.addEventListener('change', async (event) => {
         const file = event.target.files[0];
         if (!file) return;
-
         uploadStatus.textContent = 'アップロード中...';
-        
         const formData = new FormData();
         formData.append('file', file);
-
         try {
             const response = await fetch('/api/upload-image', {
                 method: 'POST',
                 body: formData 
             });
-
             if (!response.ok) {
                 let errorResult;
                 try {
@@ -193,13 +213,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
                 throw new Error(errorResult.message);
             }
-
             const result = await response.json();
             const imageUrl = result.imageUrl;
             const markdownImage = `\n![${file.name}](${imageUrl})\n`;
-            
             noteContentTextarea.value += markdownImage;
             uploadStatus.textContent = '完了！';
+            updatePreview(); // 画像挿入後にもプレビューを更新
         } catch (error) {
             console.error('Upload error:', error);
             uploadStatus.textContent = `失敗: ${error.message}`;
@@ -212,6 +231,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         }
     });
+
+    // ★★★ ここを新規追加 ★★★
+    // テキストエリアに入力があるたびにプレビューを更新
+    noteContentTextarea.addEventListener('input', updatePreview);
 
     const closeDeleteModal = () => {
         deleteModal.classList.remove('is-open');

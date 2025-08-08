@@ -46,28 +46,23 @@ document.addEventListener('DOMContentLoaded', async () => {
             const card = document.createElement('article');
             card.className = 'card';
 
-            // ★★★ ここから下を更新しました ★★★
-            // 本文から最初の画像URLを抽出する
             const imageRegex = /!\[.*?\]\((.*?)\)/;
             const match = note.content.match(imageRegex);
-            let contentPreview;
+            let contentPreviewHTML;
 
             if (match) {
                 // 画像が見つかった場合、画像プレビューを表示
-                contentPreview = `<div class="card-image-preview" style="background-image: url('${match[1]}')"></div>`;
+                contentPreviewHTML = `<div class="card-image-preview" style="background-image: url('${match[1]}')"></div>`;
             } else {
                 // 画像が見つからない場合、テキストプレビューを表示
-                contentPreview = `<p class="card-content-preview">${note.content}</p>`;
+                contentPreviewHTML = `<p class="card-content-preview">${note.content}</p>`;
             }
 
+            // タイトルが上で、タグは表示しない新しい構造
             card.innerHTML = `
-                ${contentPreview}
-                <div class="card-text-content">
-                    <h3>${note.title}</h3>
-                    <p class="card-tags">${note.tags || ''}</p>
-                </div>
+                <h3>${note.title}</h3>
+                ${contentPreviewHTML}
             `;
-            // ★★★ ここまで更新 ★★★
 
             link.appendChild(card);
             cardGrid.appendChild(link);

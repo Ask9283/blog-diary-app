@@ -121,8 +121,7 @@ a {
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
     transition: transform 0.2s, border-color 0.2s;
     box-sizing: border-box;
-    overflow: hidden; /* はみ出した画像を角丸にするため */
-    padding: 0; /* paddingをリセット */
+    overflow: hidden;
 }
 
 .card:hover {
@@ -130,45 +129,38 @@ a {
     border-color: #9f7aea;
 }
 
-/* ★★★ ここから下を更新しました ★★★ */
-.card-image-preview {
-    width: 100%;
-    height: 150px;
-    background-size: cover;
-    background-position: center;
-}
-
-.card-text-content {
-    padding: 16px;
-    display: flex;
-    flex-direction: column;
-    flex-grow: 1;
-}
-
-.card-text-content h3 {
-    margin: 0 0 8px 0;
-    font-size: 18px;
+.card h3 {
+    margin: 0;
+    padding: 12px 16px;
+    font-size: 16px;
     color: #ffffff;
-}
-
-.card .card-content-preview {
-    margin: 16px; /* 画像がない場合のテキストプレビュー */
-    font-size: 14px;
-    color: #8b949e;
-    flex-grow: 1;
-    display: -webkit-box;
-    -webkit-line-clamp: 5; /* 画像がない分、少し多く表示 */
-    -webkit-box-orient: vertical;
+    background-color: rgba(0,0,0,0.1);
+    flex-shrink: 0;
+    white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
-.card .card-tags {
-    margin-top: auto; /* タグを一番下に配置 */
-    font-size: 12px;
-    color: #9f7aea;
+.card-image-preview {
+    width: 100%;
+    flex-grow: 1;
+    background-size: cover;
+    background-position: center;
+    min-height: 150px;
 }
 
+.card .card-content-preview {
+    padding: 16px;
+    margin: 0;
+    font-size: 14px;
+    color: #8b949e;
+    flex-grow: 1;
+    display: -webkit-box;
+    -webkit-line-clamp: 7;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
 
 /* --- 詳細表示 (note.html) --- */
 .note-detail-container {
@@ -373,8 +365,8 @@ a {
 }
 .note-list-item {
     display: flex;
-    align-items: center; /* 垂直方向の中央揃え */
-    gap: 16px; /* サムネイルとタイトルの間のスペース */
+    align-items: center;
+    gap: 16px;
     padding: 16px;
     background-color: #1f1f38;
     border: 1px solid #3a3a5e;
@@ -384,16 +376,16 @@ a {
 .note-list-item-thumbnail {
     width: 50px;
     height: 50px;
-    object-fit: cover; /* 画像の比率を保ったままトリミング */
+    object-fit: cover;
     border-radius: 4px;
-    flex-shrink: 0; /* 画像が縮まないように */
+    flex-shrink: 0;
 }
 .note-list-item-title {
     font-weight: bold;
-    flex-grow: 1; /* 残りのスペースを埋める */
+    flex-grow: 1;
 }
 .note-list-item-actions {
-    margin-left: auto; /* ボタンを右端に配置 */
+    margin-left: auto;
 }
 .note-list-item-actions button {
     margin-left: 8px;
@@ -503,4 +495,19 @@ a {
     height: auto;
     border-radius: 8px;
     margin: 16px 0;
+}
+
+/* ★★★ ここから下を新規追加 ★★★ */
+/* --- 管理画面のプレビュー --- */
+.live-preview-container {
+    margin-top: 32px;
+}
+.live-preview-container h2 {
+    margin-bottom: 16px;
+}
+#live-preview {
+    min-height: 150px;
+}
+.preview-placeholder {
+    color: #8b949e;
 }
