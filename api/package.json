@@ -2,6 +2,7 @@
   "dependencies": {
     "@azure/cosmos": "^4.5.0",
     "@azure/storage-blob": "^12.28.0",
-    "busboy": "^1.6.0"
+    "busboy": "^1.6.0",
+    "uuid": "^11.1.0"
   }
 }

@@ -7,7 +7,8 @@ const AZURE_STORAGE_CONNECTION_STRING = process.env.AZURE_STORAGE_CONNECTION_STR
 const CONTAINER_NAME = "images";
 
 if (!AZURE_STORAGE_CONNECTION_STRING) {
-    throw new Error("Azure Storage Connection String is not defined");
+    // サーバー起動時にエラーを投げて、設定ミスを早期に検知する
+    throw new Error("Azure Storage Connection String is not defined in environment variables.");
 }
 
 const blobServiceClient = BlobServiceClient.fromConnectionString(AZURE_STORAGE_CONNECTION_STRING);
@@ -36,7 +37,7 @@ const parseMultipartFormData = (req) => {
         if (req.body instanceof Buffer) {
             bb.end(req.body);
         } else {
-            reject(new Error("Request body is not a Buffer"));
+            reject(new Error("Request body is not a Buffer. This might be a configuration issue."));
         }
     });
 };
@@ -45,8 +46,8 @@ module.exports = async function (context, req) {
     try {
         const { file, filename, contentType } = await parseMultipartFormData(req);
 
-        if (!file) {
-            return context.res = { status: 400, body: "No file uploaded." };
+        if (!file || file.length === 0) {
+            return context.res = { status: 400, body: "No file uploaded or file is empty." };
         }
 
         const blobName = `${uuidv4()}-${filename}`;
@@ -64,7 +65,6 @@ module.exports = async function (context, req) {
 
     } catch (error) {
         context.log.error("Image upload failed:", error);
-        // フロントエンドに、より詳細なエラー情報を返すように変更
         context.res = {
             status: 500,
             headers: { 'Content-Type': 'application/json' },
