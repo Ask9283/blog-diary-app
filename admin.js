@@ -163,23 +163,22 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         uploadStatus.textContent = 'アップロード中...';
         
-        // ★★★ ここから下を更新しました ★★★
-        // FormDataオブジェクトを作成して、ファイルを追加する
         const formData = new FormData();
         formData.append('file', file);
 
         try {
-            // bodyにformDataを指定して送信する
             const response = await fetch('/api/upload-image', {
                 method: 'POST',
                 body: formData 
             });
 
+            const result = await response.json();
+
             if (!response.ok) {
-                throw new Error(`Upload failed with status: ${response.status}`);
+                // APIから返された詳細なエラーメッセージをスローする
+                throw new Error(result.message || `Upload failed with status: ${response.status}`);
             }
 
-            const result = await response.json();
             const imageUrl = result.imageUrl;
             const markdownImage = `\n![${file.name}](${imageUrl})\n`;
             
@@ -187,10 +186,16 @@ document.addEventListener('DOMContentLoaded', async () => {
             uploadStatus.textContent = '完了！';
         } catch (error) {
             console.error('Upload error:', error);
-            uploadStatus.textContent = 'アップロードに失敗しました。';
+            // 詳細なエラーメッセージを画面に表示
+            uploadStatus.textContent = `失敗: ${error.message}`;
         } finally {
             imageUploadInput.value = '';
-            setTimeout(() => { uploadStatus.textContent = ''; }, 3000);
+            // 完了メッセージは残し、エラーメッセージは少し長めに表示
+            if (uploadStatus.textContent === '完了！') {
+                setTimeout(() => { uploadStatus.textContent = ''; }, 3000);
+            } else {
+                setTimeout(() => { uploadStatus.textContent = ''; }, 7000);
+            }
         }
     });
 

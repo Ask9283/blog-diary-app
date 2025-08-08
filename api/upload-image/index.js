@@ -1,10 +1,14 @@
 // api/upload-image/index.js
 const { BlobServiceClient } = require("@azure/storage-blob");
 const busboy = require("busboy");
-const { v4: uuidv4 } = require('uuid'); // UUIDを生成するため
+const { v4: uuidv4 } = require('uuid');
 
 const AZURE_STORAGE_CONNECTION_STRING = process.env.AZURE_STORAGE_CONNECTION_STRING;
 const CONTAINER_NAME = "images";
+
+if (!AZURE_STORAGE_CONNECTION_STRING) {
+    throw new Error("Azure Storage Connection String is not defined");
+}
 
 const blobServiceClient = BlobServiceClient.fromConnectionString(AZURE_STORAGE_CONNECTION_STRING);
 const containerClient = blobServiceClient.getContainerClient(CONTAINER_NAME);
@@ -29,7 +33,6 @@ const parseMultipartFormData = (req) => {
         bb.on('close', () => resolve(result));
         bb.on('error', (err) => reject(err));
         
-        // req.bodyがBufferであることを確認
         if (req.body instanceof Buffer) {
             bb.end(req.body);
         } else {
@@ -61,9 +64,11 @@ module.exports = async function (context, req) {
 
     } catch (error) {
         context.log.error("Image upload failed:", error);
+        // フロントエンドに、より詳細なエラー情報を返すように変更
         context.res = {
             status: 500,
-            body: `Error uploading image: ${error.message}`
+            headers: { 'Content-Type': 'application/json' },
+            body: { message: `画像アップロードAPIでエラーが発生しました: ${error.message}` }
         };
     }
 };
