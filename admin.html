@@ -33,6 +33,14 @@
                     <input type="hidden" id="note-id">
                     <input type="text" id="note-title" placeholder="タイトル" required>
                     <textarea id="note-content" placeholder="内容" rows="5" required></textarea>
+                    
+                    <!-- 画像アップロード機能を追加 -->
+                    <div class="image-upload-container">
+                        <label for="image-upload">画像を挿入:</label>
+                        <input type="file" id="image-upload" accept="image/*">
+                        <span id="upload-status"></span>
+                    </div>
+
                     <input type="text" id="note-tags" placeholder="タグ (例: #HTML #アイデア)">
                     <div class="form-actions">
                         <button type="submit" id="form-submit-button">この内容で投稿する</button>

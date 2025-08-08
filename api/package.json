@@ -1,5 +1,7 @@
 {
   "dependencies": {
-    "@azure/cosmos": "^4.5.0"
+    "@azure/cosmos": "^4.5.0",
+    "@azure/storage-blob": "^12.28.0",
+    "busboy": "^1.6.0"
   }
 }

@@ -443,3 +443,37 @@ a {
     background-color: #da3633;
     color: white;
 }
+
+/* --- Wikiリンクのスタイル --- */
+.wiki-link {
+    color: #9f7aea;
+    background-color: rgba(159, 122, 234, 0.1);
+    padding: 2px 4px;
+    border-radius: 4px;
+    text-decoration: none;
+    transition: background-color 0.2s;
+}
+.wiki-link:hover {
+    background-color: rgba(159, 122, 234, 0.2);
+    text-decoration: underline;
+}
+
+.new-page-link {
+    color: #ff7b72;
+    border-bottom: 1px dashed #ff7b72;
+}
+
+/* --- 画像関連のスタイル --- */
+.image-upload-container {
+    margin-top: 8px;
+    padding: 12px;
+    background-color: #2d2d4a;
+    border-radius: 6px;
+}
+
+.embedded-image {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+    margin: 16px 0;
+}

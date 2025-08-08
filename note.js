@@ -12,14 +12,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const fetchAllNotes = async () => {
         try {
-            // ページネーションを無視して全件取得するために、pageSizeを大きな値に設定
             const response = await fetch('/api/get-notes?pageSize=1000'); 
             if (!response.ok) throw new Error('Failed to fetch notes');
             return await response.json();
         } catch (error) {
             console.error(error);
             showError('日記データの読み込みに失敗しました。');
-            return { notes: [] }; // APIの形式に合わせて空のオブジェクトを返す
+            return { notes: [] };
         }
     };
 
@@ -46,13 +45,37 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     };
 
+    const parseContent = (content, allNotes) => {
+        if (!content) return '';
+        
+        // 1. HTMLエスケープ (XSS対策)
+        let parsed = content.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+        // 2. Wikiリンクのパース
+        const wikiLinkRegex = /\[\[(.*?)\]\]/g;
+        parsed = parsed.replace(wikiLinkRegex, (match, title) => {
+            const linkedNote = allNotes.find(note => note.title.trim() === title.trim());
+            if (linkedNote) {
+                return `<a href="note.html?id=${linkedNote.id}" class="wiki-link">${title}</a>`;
+            } else {
+                return `<span class="new-page-link">${title}</span>`;
+            }
+        });
+
+        // 3. 画像Markdownのパース
+        const imageRegex = /!\[(.*?)\]\((.*?)\)/g;
+        parsed = parsed.replace(imageRegex, (match, alt, src) => {
+            return `<img src="${src}" alt="${alt}" class="embedded-image">`;
+        });
+
+        return parsed;
+    };
+
+
     const loadPage = async () => {
         if(loader) loader.style.display = 'block';
         try {
-            // ★★★ ここから下を更新しました ★★★
-            // APIからの応答(オブジェクト)をapiResponseとして受け取る
             const apiResponse = await fetchAllNotes();
-            // その中から日記の配列(notes)を取り出す
             const allNotes = apiResponse.notes; 
 
             renderTags(allNotes);
@@ -65,9 +88,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                 if (note) {
                     document.title = note.title;
+                    
+                    const parsedContent = parseContent(note.content, allNotes);
+
                     noteDetailContainer.innerHTML = `
                         <h1>${note.title}</h1>
-                        <p class="content">${note.content}</p>
+                        <div class="content">${parsedContent}</div>
                         <p class="tags">${note.tags}</p>
                     `;
                 } else {

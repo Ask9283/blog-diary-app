@@ -10,7 +10,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     const formCancelButton = document.getElementById('form-cancel-button');
     const noteIdInput = document.getElementById('note-id');
     const loader = document.getElementById('loader');
+    const imageUploadInput = document.getElementById('image-upload');
+    const uploadStatus = document.getElementById('upload-status');
+    const noteContentTextarea = document.getElementById('note-content');
     
+    // 削除モーダル関連の要素
     const deleteModal = document.getElementById('delete-modal');
     const confirmDeleteBtn = document.getElementById('modal-confirm-delete');
     const cancelDeleteBtn = document.getElementById('modal-cancel-delete');
@@ -55,21 +59,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (!response.ok) throw new Error('Failed to update note');
             return await response.json();
         },
-        // ★★★ ここから下を更新しました ★★★
         deleteNote: async (id) => {
             const response = await fetch(`/api/delete-note?id=${id}`, {
                 method: 'DELETE'
             });
-            // 失敗した場合、APIからの詳細なエラーメッセージを解析して投げる
-            if (!response.ok) {
-                let errorBody;
-                try {
-                    errorBody = await response.json();
-                } catch (e) {
-                    errorBody = { message: 'APIからエラーの詳細を取得できませんでした。' };
-                }
-                throw new Error(errorBody.message || '不明なエラーが発生しました。');
-            }
+            if (!response.ok) throw new Error('Failed to delete note');
         }
     };
 
@@ -162,7 +156,43 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
     
-    // 削除モーダルのロジック
+    // --- 画像アップロード処理 ---
+    imageUploadInput.addEventListener('change', async (event) => {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        uploadStatus.textContent = 'アップロード中...';
+        const formData = new FormData();
+        formData.append('file', file);
+
+        try {
+            const response = await fetch('/api/upload-image', {
+                method: 'POST',
+                body: file // formDataではなく直接fileを送信
+            });
+
+            if (!response.ok) {
+                throw new Error('Upload failed');
+            }
+
+            const result = await response.json();
+            const imageUrl = result.imageUrl;
+            const markdownImage = `\n![${file.name}](${imageUrl})\n`;
+            
+            // 現在のカーソル位置に挿入、または末尾に追加
+            noteContentTextarea.value += markdownImage;
+            uploadStatus.textContent = '完了！';
+        } catch (error) {
+            console.error('Upload error:', error);
+            uploadStatus.textContent = 'アップロードに失敗しました。';
+        } finally {
+            // inputをリセットして同じファイルを再度選択できるようにする
+            imageUploadInput.value = '';
+            setTimeout(() => { uploadStatus.textContent = ''; }, 3000);
+        }
+    });
+
+    // --- 削除モーダルのロジック ---
     const closeDeleteModal = () => {
         deleteModal.classList.remove('is-open');
         noteIdToDelete = null;
@@ -176,9 +206,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             await refreshPage();
         } catch (error) {
             console.error(error);
-            // ★★★ ここを更新しました ★★★
-            // 詳細なエラーメッセージを表示する
-            showError(`削除に失敗しました: ${error.message}`);
+            showError('削除に失敗しました。');
         } finally {
             closeDeleteModal();
         }
