@@ -4,7 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     loginForm.addEventListener('submit', async (event) => {
         event.preventDefault();
-        errorMessage.textContent = ''; // エラーメッセージをリセット
+        errorMessage.textContent = '';
 
         const username = document.getElementById('username').value;
         const password = document.getElementById('password').value;
@@ -17,12 +17,12 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             if (response.ok) {
-                // ログイン成功
-                sessionStorage.setItem('isLoggedIn', 'true');
-                window.location.href = 'admin.html';
-            } else {
-                // ログイン失敗
                 const result = await response.json();
+                sessionStorage.setItem('authToken', result.token);
+                window.location.href = 'admin.html';
+            } else if (response.status === 429) {
+                errorMessage.textContent = 'ログイン試行回数が多すぎます。しばらくお待ちください。';
+            } else {
                 errorMessage.textContent = 'ユーザー名またはパスワードが違います。';
             }
         } catch (error) {

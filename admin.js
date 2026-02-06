@@ -1,5 +1,4 @@
 document.addEventListener('DOMContentLoaded', async () => {
-    // HTMLから要素を取得
     const noteForm = document.getElementById('note-form');
     const successMessage = document.getElementById('success-message');
     const errorMessageDiv = document.getElementById('error-message');
@@ -14,7 +13,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const uploadStatus = document.getElementById('upload-status');
     const noteContentTextarea = document.getElementById('note-content');
     const livePreview = document.getElementById('live-preview');
-    
+
     const deleteModal = document.getElementById('delete-modal');
     const confirmDeleteBtn = document.getElementById('modal-confirm-delete');
     const cancelDeleteBtn = document.getElementById('modal-cancel-delete');
@@ -22,6 +21,20 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     let loadedNotes = [];
     let noteIdToDelete = null;
+
+    const getAuthHeaders = () => {
+        const token = sessionStorage.getItem('authToken');
+        return token ? { 'Authorization': `Bearer ${token}` } : {};
+    };
+
+    const handleUnauthorized = (response) => {
+        if (response.status === 401) {
+            sessionStorage.removeItem('authToken');
+            window.location.href = 'login.html';
+            return true;
+        }
+        return false;
+    };
 
     const showError = (message) => {
         errorMessageDiv.textContent = message;
@@ -36,63 +49,75 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const api = {
         getNotes: async () => {
-            const response = await fetch('/api/get-notes?pageSize=1000'); 
+            const response = await fetch('/api/get-notes?pageSize=1000');
             if (!response.ok) throw new Error('Failed to fetch notes');
             return await response.json();
         },
         createNote: async (note) => {
             const response = await fetch('/api/create-note', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
                 body: JSON.stringify(note)
             });
-            if (!response.ok) throw new Error('Failed to create note');
+            if (handleUnauthorized(response)) return;
+            if (!response.ok) {
+                const err = await response.json().catch(() => ({}));
+                throw new Error(err.error || 'Failed to create note');
+            }
             return await response.json();
         },
         updateNote: async (note) => {
             const response = await fetch('/api/update-note', {
                 method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
                 body: JSON.stringify(note)
             });
-            if (!response.ok) throw new Error('Failed to update note');
+            if (handleUnauthorized(response)) return;
+            if (!response.ok) {
+                const err = await response.json().catch(() => ({}));
+                throw new Error(err.error || 'Failed to update note');
+            }
             return await response.json();
         },
         deleteNote: async (id) => {
             const response = await fetch(`/api/delete-note?id=${id}`, {
-                method: 'DELETE'
+                method: 'DELETE',
+                headers: { ...getAuthHeaders() }
             });
-            if (!response.ok) throw new Error('Failed to delete note');
+            if (handleUnauthorized(response)) return;
+            if (!response.ok) {
+                const err = await response.json().catch(() => ({}));
+                throw new Error(err.error || 'Failed to delete note');
+            }
         }
     };
 
-    // ★★★ ここから下を新規追加 ★★★
-    // note.jsから持ってきた、本文を解析する関数
     const parseContent = (content, allNotes) => {
         if (!content) return '<p class="preview-placeholder">ここに本文のプレビューが表示されます。</p>';
-        let parsed = content.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        let parsed = content.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
         const wikiLinkRegex = /\[\[(.*?)\]\]/g;
         parsed = parsed.replace(wikiLinkRegex, (match, title) => {
             const linkedNote = allNotes.find(note => note.title.trim() === title.trim());
             if (linkedNote) {
-                return `<a href="note.html?id=${linkedNote.id}" class="wiki-link" target="_blank">${title}</a>`;
+                return `<a href="note.html?id=${encodeURIComponent(linkedNote.id)}" class="wiki-link" target="_blank">${escapeHtml(title)}</a>`;
             } else {
-                return `<span class="new-page-link">${title}</span>`;
+                return `<span class="new-page-link">${escapeHtml(title)}</span>`;
             }
         });
         const imageRegex = /!\[(.*?)\]\((.*?)\)/g;
         parsed = parsed.replace(imageRegex, (match, alt, src) => {
-            return `<img src="${src}" alt="${alt}" class="embedded-image">`;
+            if (src.match(/^https?:\/\//)) {
+                return `<img src="${escapeHtml(src)}" alt="${escapeHtml(alt)}" class="embedded-image">`;
+            }
+            return escapeHtml(match);
         });
         return parsed;
     };
 
-    // プレビューを更新する関数
     const updatePreview = () => {
         const content = noteContentTextarea.value;
         livePreview.innerHTML = `<div class="content">${parseContent(content, loadedNotes)}</div>`;
     };
-    // ★★★ ここまで新規追加 ★★★
 
     const resetForm = () => {
         noteForm.reset();
@@ -100,7 +125,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         formTitle.textContent = '新しい日記を追加';
         formSubmitButton.textContent = 'この内容で投稿する';
         formCancelButton.style.display = 'none';
-        updatePreview(); // プレビューもリセット
+        updatePreview();
     };
 
     const renderNoteList = (notes) => {
@@ -112,15 +137,15 @@ document.addEventListener('DOMContentLoaded', async () => {
             const imageRegex = /!\[.*?\]\((.*?)\)/;
             const match = note.content.match(imageRegex);
             let imagePreview = '';
-            if (match) {
-                imagePreview = `<img src="${match[1]}" alt="preview" class="note-list-item-thumbnail">`;
+            if (match && match[1].match(/^https?:\/\//)) {
+                imagePreview = `<img src="${escapeHtml(match[1])}" alt="preview" class="note-list-item-thumbnail">`;
             }
             item.innerHTML = `
                 ${imagePreview}
-                <span class="note-list-item-title">${note.title}</span>
+                <span class="note-list-item-title">${escapeHtml(note.title)}</span>
                 <div class="note-list-item-actions">
-                    <button class="edit-button" data-id="${note.id}">編集</button>
-                    <button class="delete-button" data-id="${note.id}">削除</button>
+                    <button class="edit-button" data-id="${escapeHtml(note.id)}">編集</button>
+                    <button class="delete-button" data-id="${escapeHtml(note.id)}">削除</button>
                 </div>
             `;
             noteList.appendChild(item);
@@ -132,9 +157,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         noteList.style.display = 'none';
         try {
             const response = await api.getNotes();
-            loadedNotes = response.notes; 
+            loadedNotes = response.notes;
             renderNoteList(loadedNotes);
-            updatePreview(); // ページ読み込み時にもプレビューを初期化
+            updatePreview();
         } catch (error) {
             console.error(error);
             showError('日記リストの読み込みに失敗しました。');
@@ -165,7 +190,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             await refreshPage();
         } catch (error) {
             console.error(error);
-            showError('操作に失敗しました。');
+            showError(error.message || '操作に失敗しました。');
         }
     });
 
@@ -185,14 +210,14 @@ document.addEventListener('DOMContentLoaded', async () => {
                 formSubmitButton.textContent = '更新する';
                 formCancelButton.style.display = 'inline-block';
                 window.scrollTo(0, 0);
-                updatePreview(); // 編集時にもプレビューを更新
+                updatePreview();
             }
         } else if (target.classList.contains('delete-button')) {
             noteIdToDelete = id;
             deleteModal.classList.add('is-open');
         }
     });
-    
+
     imageUploadInput.addEventListener('change', async (event) => {
         const file = event.target.files[0];
         if (!file) return;
@@ -202,23 +227,25 @@ document.addEventListener('DOMContentLoaded', async () => {
         try {
             const response = await fetch('/api/upload-image', {
                 method: 'POST',
-                body: formData 
+                headers: { ...getAuthHeaders() },
+                body: formData
             });
+            if (handleUnauthorized(response)) return;
             if (!response.ok) {
                 let errorResult;
                 try {
                     errorResult = await response.json();
                 } catch (e) {
-                    errorResult = { message: `アップロードに失敗しました。 (Status: ${response.status})` };
+                    errorResult = { error: `アップロードに失敗しました。 (Status: ${response.status})` };
                 }
-                throw new Error(errorResult.message);
+                throw new Error(errorResult.error || errorResult.message);
             }
             const result = await response.json();
             const imageUrl = result.imageUrl;
             const markdownImage = `\n![${file.name}](${imageUrl})\n`;
             noteContentTextarea.value += markdownImage;
             uploadStatus.textContent = '完了！';
-            updatePreview(); // 画像挿入後にもプレビューを更新
+            updatePreview();
         } catch (error) {
             console.error('Upload error:', error);
             uploadStatus.textContent = `失敗: ${error.message}`;
@@ -232,8 +259,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 
-    // ★★★ ここを新規追加 ★★★
-    // テキストエリアに入力があるたびにプレビューを更新
     noteContentTextarea.addEventListener('input', updatePreview);
 
     const closeDeleteModal = () => {
@@ -257,12 +282,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     cancelDeleteBtn.addEventListener('click', closeDeleteModal);
     modalOverlay.addEventListener('click', closeDeleteModal);
-    
+
     formCancelButton.addEventListener('click', resetForm);
 
     logoutButton.addEventListener('click', (event) => {
         event.preventDefault();
-        sessionStorage.removeItem('isLoggedIn');
+        sessionStorage.removeItem('authToken');
         window.location.href = 'login.html';
     });
 

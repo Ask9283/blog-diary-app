@@ -33,7 +33,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             return { notes: [], totalItems: 0 };
         }
     };
-    
+
     const renderCards = (notes) => {
         cardGrid.innerHTML = '';
         if (!notes || notes.length === 0) {
@@ -42,25 +42,22 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
         notes.forEach(note => {
             const link = document.createElement('a');
-            link.href = `note.html?id=${note.id}`; 
+            link.href = `note.html?id=${encodeURIComponent(note.id)}`;
             const card = document.createElement('article');
             card.className = 'card';
 
             const imageRegex = /!\[.*?\]\((.*?)\)/;
-            const match = note.content.match(imageRegex);
+            const match = note.content ? note.content.match(imageRegex) : null;
             let contentPreviewHTML;
 
-            if (match) {
-                // 画像が見つかった場合、画像プレビューを表示
-                contentPreviewHTML = `<div class="card-image-preview" style="background-image: url('${match[1]}')"></div>`;
+            if (match && match[1].match(/^https?:\/\//)) {
+                contentPreviewHTML = `<div class="card-image-preview" style="background-image: url('${escapeHtml(match[1])}')"></div>`;
             } else {
-                // 画像が見つからない場合、テキストプレビューを表示
-                contentPreviewHTML = `<p class="card-content-preview">${note.content}</p>`;
+                contentPreviewHTML = `<p class="card-content-preview">${escapeHtml(note.content)}</p>`;
             }
 
-            // タイトルが上で、タグは表示しない新しい構造
             card.innerHTML = `
-                <h3>${note.title}</h3>
+                <h3>${escapeHtml(note.title)}</h3>
                 ${contentPreviewHTML}
             `;
 
@@ -68,7 +65,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             cardGrid.appendChild(link);
         });
     };
-    
+
     const renderPagination = (totalItems) => {
         paginationContainer.innerHTML = '';
         const totalPages = Math.ceil(totalItems / pageSize);
@@ -142,7 +139,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         loadNotes();
     });
 
-    // --- 初期表示処理 ---
     const initializePage = async () => {
         loaderTags.style.display = 'block';
         tagListContainer.style.display = 'none';

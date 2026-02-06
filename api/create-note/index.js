@@ -1,23 +1,47 @@
-// api/create-note/index.js
-const { container } = require("../shared/cosmosClient");
+const { container } = require('../shared/cosmosClient');
+const { verifyToken, unauthorizedResponse } = require('../shared/authMiddleware');
+const { validateNote } = require('../shared/validate');
 
 module.exports = async function (context, req) {
+    const user = verifyToken(req);
+    if (!user) {
+        context.res = unauthorizedResponse();
+        return;
+    }
+
     try {
         const newNote = req.body;
-        // Cosmos DBはidが必須。簡易的にタイムスタンプを文字列として利用
-        newNote.id = Date.now().toString(); 
 
-        const { resource: createdItem } = await container.items.create(newNote);
+        const validation = validateNote(newNote);
+        if (!validation.valid) {
+            context.res = {
+                status: 400,
+                headers: { 'Content-Type': 'application/json' },
+                body: { error: validation.message }
+            };
+            return;
+        }
+
+        const sanitizedNote = {
+            id: Date.now().toString(),
+            title: newNote.title.trim(),
+            content: newNote.content,
+            tags: (newNote.tags || '').trim()
+        };
+
+        const { resource: createdItem } = await container.items.create(sanitizedNote);
 
         context.res = {
-            status: 201, // Created
+            status: 201,
             headers: { 'Content-Type': 'application/json' },
             body: createdItem
         };
     } catch (error) {
+        context.log.error('Error creating note:', error);
         context.res = {
             status: 500,
-            body: `Error creating note: ${error.message}`
+            headers: { 'Content-Type': 'application/json' },
+            body: { error: '日記の作成中にエラーが発生しました。' }
         };
     }
 };
