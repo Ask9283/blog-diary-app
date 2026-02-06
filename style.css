@@ -144,8 +144,10 @@ a {
 .card-image-preview {
     width: 100%;
     flex-grow: 1;
-    background-size: cover;
-    background-position: center;
+    /* ★★★ ここを更新しました ★★★ */
+    background-size: 90% 90%; /* 画像サイズを90%に */
+    background-repeat: no-repeat; /* 画像を繰り返さない */
+    background-position: center; /* 画像を中央に配置 */
     min-height: 150px;
 }
 
@@ -496,6 +498,7 @@ a {
     border-radius: 8px;
     margin: 16px 0;
 }
+<<<<<<< HEAD
 
 /* ★★★ ここから下を新規追加 ★★★ */
 /* --- 管理画面のプレビュー --- */
@@ -562,3 +565,5 @@ a {
     font-size: 12px;
     color: #9f7aea;
 }
+=======
+>>>>>>> 6443226297fa6a35997dbd09683b5a38395b867f
