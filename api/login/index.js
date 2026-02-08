@@ -2,7 +2,6 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { createRateLimiter } = require('../shared/rateLimiter');
 
-const JWT_SECRET = process.env.JWT_SECRET;
 const JWT_EXPIRY = '1h';
 
 // レート制限: 同一IPから15分間に5回まで
@@ -14,7 +13,7 @@ module.exports = async function (context, req) {
         context.res = {
             status: 429,
             headers: { 'Content-Type': 'application/json' },
-            body: { error: 'ログイン試行回数が多すぎます。しばらくお待ちください。' }
+            body: JSON.stringify({ error: 'ログイン試行回数が多すぎます。しばらくお待ちください。' })
         };
         return;
     }
@@ -25,13 +24,24 @@ module.exports = async function (context, req) {
         context.res = {
             status: 400,
             headers: { 'Content-Type': 'application/json' },
-            body: { error: 'ユーザー名とパスワードが必要です。' }
+            body: JSON.stringify({ error: 'ユーザー名とパスワードが必要です。' })
         };
         return;
     }
 
+    const jwtSecret = process.env.JWT_SECRET;
     const correctUsername = process.env.ADMIN_USERNAME;
     const correctPasswordHash = process.env.ADMIN_PASSWORD_HASH;
+
+    if (!jwtSecret) {
+        context.log.error('JWT_SECRET is not configured');
+        context.res = {
+            status: 500,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ error: 'サーバー設定エラーです。' })
+        };
+        return;
+    }
 
     try {
         const isUsernameValid = username === correctUsername;
@@ -40,19 +50,19 @@ module.exports = async function (context, req) {
         if (isUsernameValid && isPasswordValid) {
             const token = jwt.sign(
                 { username: username, role: 'admin' },
-                JWT_SECRET,
+                jwtSecret,
                 { expiresIn: JWT_EXPIRY }
             );
             context.res = {
                 status: 200,
                 headers: { 'Content-Type': 'application/json' },
-                body: { success: true, token: token }
+                body: JSON.stringify({ success: true, token: token })
             };
         } else {
             context.res = {
                 status: 401,
                 headers: { 'Content-Type': 'application/json' },
-                body: { error: 'ユーザー名またはパスワードが正しくありません。' }
+                body: JSON.stringify({ error: 'ユーザー名またはパスワードが正しくありません。' })
             };
         }
     } catch (error) {
@@ -60,7 +70,7 @@ module.exports = async function (context, req) {
         context.res = {
             status: 500,
             headers: { 'Content-Type': 'application/json' },
-            body: { error: 'ログイン処理中にエラーが発生しました。' }
+            body: JSON.stringify({ error: 'ログイン処理中にエラーが発生しました。' })
         };
     }
 };
