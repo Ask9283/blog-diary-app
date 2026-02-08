@@ -27,8 +27,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         return token ? { 'Authorization': `Bearer ${token}` } : {};
     };
 
-    const handleUnauthorized = (response) => {
+    const handleUnauthorized = async (response) => {
         if (response.status === 401) {
+            try {
+                const body = await response.clone().json();
+                console.error('Auth failed - reason:', body.reason, body);
+            } catch (e) {
+                console.error('Auth failed - could not parse response');
+            }
             sessionStorage.removeItem('authToken');
             window.location.href = 'login.html';
             return true;
@@ -59,7 +65,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
                 body: JSON.stringify(note)
             });
-            if (handleUnauthorized(response)) return;
+            if (await handleUnauthorized(response)) return;
             if (!response.ok) {
                 const err = await response.json().catch(() => ({}));
                 throw new Error(err.error || 'Failed to create note');
@@ -72,7 +78,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
                 body: JSON.stringify(note)
             });
-            if (handleUnauthorized(response)) return;
+            if (await handleUnauthorized(response)) return;
             if (!response.ok) {
                 const err = await response.json().catch(() => ({}));
                 throw new Error(err.error || 'Failed to update note');
@@ -84,7 +90,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 method: 'DELETE',
                 headers: { ...getAuthHeaders() }
             });
-            if (handleUnauthorized(response)) return;
+            if (await handleUnauthorized(response)) return;
             if (!response.ok) {
                 const err = await response.json().catch(() => ({}));
                 throw new Error(err.error || 'Failed to delete note');
@@ -230,7 +236,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 headers: { ...getAuthHeaders() },
                 body: formData
             });
-            if (handleUnauthorized(response)) return;
+            if (await handleUnauthorized(response)) return;
             if (!response.ok) {
                 let errorResult;
                 try {
