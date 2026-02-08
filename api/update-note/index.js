@@ -3,9 +3,10 @@ const { verifyToken, unauthorizedResponse } = require('../shared/authMiddleware'
 const { validateNote } = require('../shared/validate');
 
 module.exports = async function (context, req) {
-    const user = verifyToken(req);
-    if (!user) {
-        context.res = unauthorizedResponse();
+    const auth = verifyToken(req);
+    if (!auth.user) {
+        context.log.error('Auth failed:', auth.error);
+        context.res = unauthorizedResponse(auth.error);
         return;
     }
 

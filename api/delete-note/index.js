@@ -6,9 +6,10 @@ const AZURE_STORAGE_CONNECTION_STRING = process.env.AZURE_STORAGE_CONNECTION_STR
 const BLOB_CONTAINER_NAME = 'images';
 
 module.exports = async function (context, req) {
-    const user = verifyToken(req);
-    if (!user) {
-        context.res = unauthorizedResponse();
+    const auth = verifyToken(req);
+    if (!auth.user) {
+        context.log.error('Auth failed:', auth.error);
+        context.res = unauthorizedResponse(auth.error);
         return;
     }
 
